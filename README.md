@@ -104,19 +104,6 @@ Progress remains available when reopening the game in the same browser, provided
 
 ---
 
-## 🛠️ TECHNOLOGY
-
-Built using:
-
-- HTML5
-- CSS3
-- JavaScript
-- GitHub Pages
-
-No software installation or account registration is required to play.
-
----
-
 ## ⚠️ TRAINING DISCLAIMER
 
 This is an unofficial educational training prototype.
