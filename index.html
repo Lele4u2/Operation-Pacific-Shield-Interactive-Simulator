@@ -1,0 +1,345 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operation Pacific Shield | Command Academy</title>
+<style>
+:root {
+  --bg:#030b17;
+  --panel:#10253a;
+  --cyan:#5be3fa;
+  --gold:#ffd181;
+  --green:#78ebba;
+  --muted:#aac0d3;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  background:var(--bg);
+  color:white;
+  font-family:system-ui,Arial,sans-serif;
+}
+header {
+  padding:20px 6%;
+  border-bottom:1px solid #2d5167;
+  background:#071526;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.brand {font-weight:900;letter-spacing:2px}
+.brand span {color:var(--cyan)}
+.online {font-size:11px;color:var(--green)}
+.online:before {content:"● ";animation:blink 1.5s infinite}
+@keyframes blink {50%{opacity:.3}}
+.hero {
+  position:relative;
+  min-height:680px;
+  padding:90px 6%;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  background:radial-gradient(
+    ellipse at 75% 45%,#174765,#061525 65%,#020811
+  );
+}
+.grid {
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(#65c8f012 1px,transparent 1px),
+    linear-gradient(90deg,#65c8f012 1px,transparent 1px);
+  background-size:45px 45px;
+  pointer-events:none;
+}
+.radar {
+  position:absolute;
+  right:-120px;
+  top:50%;
+  transform:translateY(-50%);
+  width:min(65vw,720px);
+  aspect-ratio:1;
+  border-radius:50%;
+  border:1px solid #52ddfa55;
+  background:
+    repeating-radial-gradient(
+      circle,transparent 0 64px,#57d6f522 65px 66px
+    ),
+    linear-gradient(90deg,transparent 49.9%,#55d7f533 50%,transparent 50.1%),
+    linear-gradient(transparent 49.9%,#55d7f533 50%,transparent 50.1%);
+}
+.radar:after {
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:conic-gradient(
+    transparent 0 290deg,#63e6fd11 315deg,#63e6fd88 359deg,transparent
+  );
+  animation:spin 5s linear infinite;
+}
+@keyframes spin {to{rotate:360deg}}
+.ping {
+  position:absolute;
+  width:10px;height:10px;
+  border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 20px var(--cyan);
+}
+.p1{top:30%;left:35%}
+.p2{top:66%;left:58%}
+.p3{top:47%;left:79%;background:var(--gold)}
+.content {position:relative;z-index:2;max-width:730px}
+.eyebrow {
+  color:var(--cyan);
+  font:700 12px monospace;
+  letter-spacing:3px;
+}
+h1 {
+  font-size:clamp(48px,7vw,94px);
+  line-height:.96;
+  letter-spacing:-3px;
+  font-weight:950;
+  margin:24px 0;
+}
+h1 span {
+  display:block;
+  color:var(--cyan);
+  text-shadow:0 0 35px #38dafa55;
+}
+.subtitle {
+  max-width:530px;
+  font-size:17px;
+  color:var(--muted);
+  line-height:1.8;
+}
+.actions {display:flex;gap:12px;flex-wrap:wrap;margin:30px 0}
+button {
+  cursor:pointer;
+  border:1px solid #426783;
+  border-radius:6px;
+  padding:15px 23px;
+  color:white;
+  background:#17334a;
+  font:800 13px system-ui;
+}
+button:hover {
+  border-color:var(--cyan);
+  transform:translateY(-2px);
+}
+.primary {
+  background:linear-gradient(110deg,#43d0ee,#8df1ff);
+  color:#031827;
+  border-color:var(--cyan);
+}
+.section {
+  max-width:1350px;
+  margin:auto;
+  padding:65px 5%;
+}
+.section h2 {font-size:32px;margin:0}
+.section>p {color:var(--muted);line-height:1.7}
+.cards {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+  margin-top:25px;
+}
+.card {
+  text-align:left;
+  min-height:210px;
+  padding:27px;
+  border:1px solid #32516a;
+  border-radius:12px;
+  background:linear-gradient(135deg,#122c43,#0b1a2b);
+  color:white;
+}
+.card.selected {
+  border-color:var(--cyan);
+  box-shadow:0 0 25px #47e0ff28;
+}
+.card small {color:var(--cyan);letter-spacing:2px}
+.card h3 {font-size:25px;margin:18px 0 10px}
+.card p {color:var(--muted);line-height:1.6;font-weight:400}
+.features {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-top:25px;
+}
+.feature {
+  background:#0d2134;
+  border:1px solid #304f68;
+  padding:23px;
+  border-radius:10px;
+}
+.feature b {color:var(--cyan)}
+.feature p {color:var(--muted);font-size:13px;line-height:1.6}
+.launch {
+  border:1px solid #37758e;
+  border-radius:15px;
+  padding:45px;
+  text-align:center;
+  background:linear-gradient(120deg,#153950,#0a1727);
+}
+footer {
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.8;
+  padding:25px;
+  border-top:1px solid #28435b;
+}
+@media(max-width:900px) {
+  .cards{grid-template-columns:1fr}
+  .features{grid-template-columns:repeat(2,1fr)}
+  .radar{opacity:.25;width:680px;right:-300px}
+}
+@media(max-width:550px) {
+  .features{grid-template-columns:1fr}
+  .hero{padding:65px 20px}
+  .section{padding:45px 20px}
+  h1{font-size:50px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">OPS <span>// PACIFIC SHIELD</span></div>
+  <div class="online">TRAINING SYSTEM ONLINE</div>
+</header>
+
+<section class="hero">
+  <div class="grid"></div>
+  <div class="radar" aria-hidden="true">
+    <i class="ping p1"></i>
+    <i class="ping p2"></i>
+    <i class="ping p3"></i>
+  </div>
+
+  <div class="content">
+    <div class="eyebrow">
+      JOINT OPERATIONS // LIVE TRAINING SIMULATOR
+    </div>
+
+    <h1>
+      OPERATION
+      <span>PACIFIC</span>
+      SHIELD
+    </h1>
+
+    <p class="subtitle">
+      Enter the command center. Establish forward operating
+      sites, coordinate airlift, sustain your forces, and
+      respond to a computer-controlled exercise environment.
+    </p>
+
+    <div class="actions">
+      <button class="primary" onclick="launch()">
+        ▶ LAUNCH LIVE MISSION
+      </button>
+      <button onclick="tutorial()">
+        ◈ GUIDED TRAINING
+      </button>
+    </div>
+
+    <div class="eyebrow">
+      SOLO VS COMPUTER • LIVE CLOCK • THREE DIFFICULTIES
+    </div>
+  </div>
+</section>
+
+<section class="section" id="difficulty">
+  <div class="eyebrow">SELECT YOUR EXPERIENCE</div>
+  <h2>Choose Your Command Level</h2>
+  <p>Select a difficulty. It changes the mission deadline,
+     event frequency, and available resources.</p>
+
+  <div class="cards">
+    <button class="card selected" data-level="beginner">
+      <small>01 // ACADEMY</small>
+      <h3>BEGINNER</h3>
+      <p>More time, extra resources, and detailed explanations.</p>
+    </button>
+
+    <button class="card" data-level="intermediate">
+      <small>02 // OPERATIONS</small>
+      <h3>INTERMEDIATE</h3>
+      <p>Faster events and more difficult sustainment decisions.</p>
+    </button>
+
+    <button class="card" data-level="expert">
+      <small>03 // COMMAND</small>
+      <h3>EXPERT</h3>
+      <p>High-tempo play, limited resources, and aggressive disruption.</p>
+    </button>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Inside The Mission</h2>
+  <div class="features">
+    <div class="feature">
+      <b>◎ LIVE GAME MAP</b>
+      <p>Select FOSs, view aircraft movement, and manage the board.</p>
+    </div>
+    <div class="feature">
+      <b>✈ AIRLIFT</b>
+      <p>Dispatch simulated cargo aircraft to establish site capability.</p>
+    </div>
+    <div class="feature">
+      <b>⚡ COMPUTER OPPONENT</b>
+      <p>React to events, resource pressure, and changing conditions.</p>
+    </div>
+    <div class="feature">
+      <b>▤ TRAINING</b>
+      <p>Follow tutorial steps and examine the after-action review.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="launch">
+    <div class="eyebrow">OPS // MISSION CONTROL</div>
+    <h2>READY TO COMMAND?</h2>
+    <p>Select your level and start the live training exercise.</p>
+    <button class="primary" onclick="launch()">
+      ▶ INITIATE OPERATION PACIFIC SHIELD
+    </button>
+  </div>
+</section>
+
+<footer>
+  OPERATION PACIFIC SHIELD — INDEPENDENT TRAINING PROTOTYPE
+  <div>
+    Illustrative map, rules, and scoring. Not the official OPS engine.
+  </div>
+</footer>
+
+<script>
+let difficulty = "beginner";
+
+document.querySelectorAll("[data-level]").forEach(card=>{
+  card.addEventListener("click",()=>{
+    difficulty = card.dataset.level;
+    document.querySelectorAll("[data-level]").forEach(item=>{
+      item.classList.toggle("selected",item===card);
+    });
+  });
+});
+
+function launch(){
+  window.location.href =
+    "./opt.html?level=" + encodeURIComponent(difficulty);
+}
+
+function tutorial(){
+  window.location.href =
+    "./opt.html?level=beginner&tutorial=1";
+}
+</script>
+</body>
+</html>
