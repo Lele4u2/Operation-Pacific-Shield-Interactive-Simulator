@@ -1,0 +1,1330 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OPS | Live Mission Command</title>
+
+<link rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+
+<style>
+:root{
+ --bg:#030609;--panel:#0e1921;--line:#345361;
+ --cyan:#37e7ce;--blue:#37bffa;--gold:#ffca76;
+ --red:#ff6178;--green:#6dedaf;--text:#f0faff;
+ --muted:#adbfca
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font:14px system-ui,Arial
+}
+button,input,select{
+ font:inherit;padding:10px;border-radius:7px;
+ color:white;background:#18313e;
+ border:1px solid #406372
+}
+button{cursor:pointer}
+button:hover{border-color:var(--cyan);background:#245264}
+button:disabled{opacity:.4;cursor:not-allowed}
+.primary{background:#087f71;border-color:var(--cyan)}
+header{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:10px;flex-wrap:wrap;padding:13px 18px;
+ background:#071117;border-bottom:1px solid var(--line)
+}
+header h2{margin:0;letter-spacing:2px;font-size:19px}
+header h2 span{color:var(--cyan)}
+.stats{display:flex;gap:7px;flex-wrap:wrap}
+.chip{
+ padding:8px;background:#142630;border:1px solid var(--line);
+ border-radius:6px;font:12px monospace
+}
+.chip b{color:var(--gold)}
+.layout{
+ display:grid;grid-template-columns:245px minmax(0,1fr) 270px;
+ gap:10px;padding:10px;max-width:1850px;margin:auto
+}
+.panel{
+ background:var(--panel);border:1px solid var(--line);
+ border-radius:10px;padding:15px;margin-bottom:10px
+}
+h3{
+ color:var(--cyan);font-size:12px;
+ letter-spacing:1.2px;margin:0 0 12px
+}
+h2{color:var(--cyan)}
+p{line-height:1.65}
+.muted{color:var(--muted)}
+.full{display:block;width:100%;text-align:left;margin:7px 0}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.row>*{flex:1}
+.stat{
+ display:flex;justify-content:space-between;gap:10px;
+ padding:8px 0;border-bottom:1px solid #28434d
+}
+.stat strong{color:var(--gold)}
+#map{
+ width:100%;height:580px;background:#0a1824;
+ border:1px solid #496d79;border-radius:9px
+}
+.leaflet-container{background:#081622}
+.leaflet-control-attribution{font-size:10px!important}
+.plane{
+ background:transparent;border:0;
+ font-size:28px;line-height:32px;
+ text-shadow:0 0 7px black,0 0 13px black;
+ text-align:center
+}
+.baseDot{
+ width:17px;height:17px;border-radius:50%;
+ background:#00a899;border:3px solid #b3fff1;
+ box-shadow:0 0 15px #00ffcc
+}
+.fosDot{
+ width:16px;height:16px;border-radius:3px;
+ background:#aa7331;border:3px solid var(--gold);
+ transform:rotate(45deg)
+}
+.notice{
+ border-left:3px solid var(--gold);
+ padding:12px;background:#1a3039;line-height:1.65
+}
+#feed{max-height:250px;overflow:auto}
+.entry{
+ border-bottom:1px solid #29434d;
+ padding:8px 0;line-height:1.5
+}
+.entry b{color:var(--gold)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button.on{border-color:var(--cyan);background:#0e6558}
+.hidden{display:none!important}
+#rfiGrid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px
+}
+.rfi{
+ padding:11px;text-align:left;background:#182d39;
+ border:1px solid #47636c;border-radius:7px
+}
+.rfi.done{background:#104c43;border-color:var(--green)}
+.rfi small{display:block;color:#b9ced5;margin-top:4px}
+#lesson{
+ padding:14px;background:#0d3936;
+ border:1px solid var(--cyan);border-radius:9px
+}
+#modal{
+ position:fixed;inset:0;background:#000e;
+ z-index:10000;display:flex;align-items:center;
+ justify-content:center;padding:16px
+}
+.dialog{
+ width:min(650px,100%);max-height:88vh;overflow:auto;
+ background:#112530;border:1px solid var(--cyan);
+ padding:24px;border-radius:15px
+}
+.choice{width:100%;text-align:left;margin:8px 0}
+#coach{
+ position:fixed;right:17px;bottom:17px;z-index:900;
+ width:275px;padding:12px;
+ background:#081820f5;border:1px solid #4c9190;
+ border-radius:16px;box-shadow:0 10px 30px #000b
+}
+.coachHead{display:flex;gap:10px;align-items:center}
+#face{
+ font-size:39px;width:62px;height:62px;
+ border-radius:50%;background:#18414a;
+ display:grid;place-items:center;
+ border:2px solid var(--cyan);
+ animation:bob 3s ease-in-out infinite
+}
+@keyframes bob{50%{transform:translateY(-4px)}}
+#coach[data-mood=wrong] #face{
+ border-color:var(--red);animation:shake .25s 2
+}
+@keyframes shake{
+ 25%{transform:translateX(-4px)}
+ 75%{transform:translateX(4px)}
+}
+#coach[data-mood=good] #face{border-color:var(--green)}
+#coach[data-mood=think] #face{border-color:var(--gold)}
+#speech{font-size:12px;line-height:1.6;margin:10px 0}
+#coach button{font-size:11px;padding:7px}
+#roomRoster{margin-top:13px}
+.member{
+ border-bottom:1px solid #38515a;
+ padding:10px 0;display:flex;align-items:center;
+ justify-content:space-between;gap:8px;flex-wrap:wrap
+}
+footer{
+ padding:20px;text-align:center;
+ color:var(--muted);font-size:11px
+}
+@media(max-width:1120px){
+ .layout{grid-template-columns:210px minmax(0,1fr)}
+ .right{grid-column:1/-1}
+}
+@media(max-width:750px){
+ .layout{display:block}
+ #map{height:470px}
+ #rfiGrid{grid-template-columns:1fr}
+ #coach{right:6px;bottom:6px;width:205px}
+ #face{font-size:29px;width:45px;height:45px}
+}
+</style>
+</head>
+
+<body>
+<header>
+ <h2>OPS <span>// LIVE COMMAND</span></h2>
+ <div class="stats">
+  <div class="chip">MODE <b id="modeLabel">EASY</b></div>
+  <div class="chip">TURN <b id="turn">1</b></div>
+  <div class="chip">TIME <b id="time">00:00</b></div>
+  <div class="chip">MP <b id="mp">0</b></div>
+  <div class="chip">PRESSURE <b id="pressure">0</b></div>
+ </div>
+</header>
+
+<div class="layout">
+<aside>
+ <div class="panel">
+  <h3>MISSION CONTROL</h3>
+  <p>
+   Establish and sustain fictional Forward Operating
+   Sites from Pacific MOB teams. Complete RFIs,
+   coordinate mobility and earn valid training MP.
+  </p>
+  <div class="stat"><span>Practice resources</span><strong id="resources">0</strong></div>
+  <div class="stat"><span>FOS ready</span><strong id="active">0</strong></div>
+  <div class="stat"><span>RFI completions</span><strong id="rfiCount">0</strong></div>
+  <button class="full primary" id="play" onclick="toggle()">▶ RESUME</button>
+  <div class="row">
+   <button onclick="speed=1">1×</button>
+   <button onclick="speed=2">2×</button>
+   <button onclick="speed=4">4×</button>
+  </div>
+  <button class="full" onclick="beginTutorial()">GUIDED TUTORIAL</button>
+  <button class="full" onclick="showAAR()">AFTER-ACTION REVIEW</button>
+  <button class="full" onclick="resetMission()">RESTART MISSION</button>
+  <button class="full" onclick="location.href='./index.html'">RETURN HOME</button>
+ </div>
+
+ <div class="panel">
+  <h3>YOUR COMMAND ROLE</h3>
+  <select id="role" style="width:100%" onchange="render()">
+   <option>CAOC</option>
+   <option>MOB</option>
+   <option>CSpOC</option>
+   <option>MEDCOM</option>
+   <option>GM</option>
+  </select>
+  <p id="roleHelp" class="muted"></p>
+ </div>
+
+ <div class="panel">
+  <h3>CURRENT OBJECTIVES</h3>
+  <div id="objectives"></div>
+ </div>
+</aside>
+
+<main>
+ <div class="tabs">
+  <button class="on" data-tab="mapPage" onclick="tab('mapPage')">LIVE MAP</button>
+  <button data-tab="rulesPage" onclick="tab('rulesPage')">LEARN RULES</button>
+  <button data-tab="teamPage" onclick="tab('teamPage')">HOST / JOIN</button>
+  <button data-tab="aarPage" onclick="tab('aarPage')">DEBRIEF</button>
+ </div>
+
+ <section id="mapPage">
+  <div class="panel">
+   <h3>INDO-PACIFIC — SIMULATED AIRCRAFT MOVEMENT</h3>
+   <div id="map"></div>
+   <div class="notice" id="hint">
+    Click a gold diamond for a fictional FOS.
+    The clock must run for flights to move.
+   </div>
+   <p class="muted">
+    Blue = friendly patrol, gold = cargo, red = fictional
+    opposing aircraft. Real base markers are for geographic
+    orientation, not actual readiness information.
+   </p>
+  </div>
+
+  <div id="lesson" class="panel hidden">
+   <h3 id="lessonTitle"></h3>
+   <p id="lessonText"></p>
+   <button onclick="nextLesson()" id="lessonNext">NEXT STEP</button>
+   <button onclick="endTutorial()">EXIT TUTORIAL</button>
+  </div>
+
+  <div class="panel">
+   <h3>MISSION LOG — WHAT HAPPENED AND WHY</h3>
+   <div id="feed"></div>
+  </div>
+ </section>
+
+ <section id="rulesPage" class="panel hidden">
+  <h2>OPS LEARNING ACADEMY</h2>
+  <h3>WHAT IS THE MISSION?</h3>
+  <p>
+   In the official OPS exercise, CJTF Agile Dragon
+   disperses from Main Operating Bases (MOBs) and
+   establishes and sustains Forward Operating Sites (FOSs).
+   Teams coordinate aircraft, personnel, equipment,
+   logistics and mission operations to earn Mission Points
+   and achieve the instructor-defined victory condition.
+  </p>
+
+  <h3>WHO DOES WHAT?</h3>
+  <p><b>CAOC:</b> Coordinates air operations, aircraft
+   allocations and applicable ATO execution.</p>
+  <p><b>MOB:</b> Selects FOSs, requests RFIs,
+   plans personnel and equipment and coordinates mobility.</p>
+  <p><b>CSpOC:</b> Coordinates space support under
+   the applicable exercise rules.</p>
+  <p><b>MEDCOM:</b> Coordinates medical support,
+   patient tracking and applicable medical events.</p>
+  <p><b>GM:</b> Provides exercise adjudication and
+   authorized RFI results, and maintains scoring.</p>
+
+  <h3>TEN AIRFIELD RFIs</h3>
+  <p>
+   Crash Fire Rescue, Mobility Support, Ramp Space,
+   Air Traffic Control, Equipment, Bed Down, Fuel,
+   Airfield Security, Local Community Support, Medical.
+  </p>
+  <p>
+   Teams select their initial five RFIs for each FOS.
+   Completing all ten airfield RFIs earns 5 official
+   Mission Points in the cited OPS guide.
+  </p>
+
+  <h3>OTHER OFFICIAL MISSION POINT VALUES</h3>
+  <p>
+   Qualifying fighter sortie from a FOS into an
+   activated area: 5 MP.
+   Target adjudication: 10-strength = 5 MP;
+   12-strength = 7 MP; 20-strength = 10 MP.
+   Those conditions require the exercise's actual
+   orders, tasks, counters and GM adjudication.
+  </p>
+
+  <h3>WHAT SHOULD YOU DO FIRST?</h3>
+  <ol>
+   <li>Review the EXORD / FRAGORD and political access.</li>
+   <li>Select suitable FOS locations.</li>
+   <li>Request the five most useful initial RFIs.</li>
+   <li>Identify needed personnel, commodities and equipment.</li>
+   <li>Coordinate mobility aircraft allocations.</li>
+   <li>Complete relevant load plans and ATO entries.</li>
+   <li>Execute approved tasks and manage events.</li>
+   <li>Report progress and prepare for the next turn.</li>
+  </ol>
+
+  <h3>IMPORTANT</h3>
+  <p>
+   The continuous aircraft animation, mock cargo capacity,
+   example RFI answers, training pressure and fictional
+   threat events are teaching aids, not the official
+   board game's adjudication. For a real evaluated
+   exercise, use your authorized guide and Game Master.
+  </p>
+  <button onclick="tab('mapPage')">RETURN TO MAP</button>
+ </section>
+
+ <section id="teamPage" class="panel hidden">
+  <h2>LIVE COMMAND ROOM</h2>
+  <p>
+   The host runs the shared mission. Other members
+   join with a code and receive FOS assignments.
+   The host must remain connected.
+  </p>
+  <input id="nickname" placeholder="Your name" maxlength="28">
+  <div class="row" style="margin-top:10px">
+   <button class="primary" onclick="hostRoom()">CREATE ROOM</button>
+   <button onclick="leaveRoom()">LEAVE ROOM</button>
+  </div>
+  <p id="roomStatus">Not connected.</p>
+  <input id="roomCode" placeholder="OPS-ABC123">
+  <button onclick="joinRoom()">JOIN ROOM</button>
+  <div id="roomRoster"></div>
+  <p class="muted">
+   Experimental peer-to-peer multiplayer. This version
+   provides a shared practice state, not a permanent
+   instructor-grade multiplayer server.
+  </p>
+ </section>
+
+ <section id="aarPage" class="panel hidden">
+  <h2>MISSION AFTER-ACTION REVIEW</h2>
+  <div id="aar"></div>
+ </section>
+</main>
+
+<aside class="right">
+ <div class="panel">
+  <h3>SELECTED LOCATION</h3>
+  <div id="selection"></div>
+  <h3>COMMAND ACTIONS</h3>
+  <button class="full" onclick="command('rfi')">◉ REQUEST AIRFIELD RFIs</button>
+  <button class="full" onclick="command('airlift')">✈ DISPATCH CARGO FLIGHT</button>
+  <button class="full" onclick="command('activate')">⬡ ESTABLISH FOS CAPABILITY</button>
+  <button class="full" onclick="command('protect')">◇ PROVIDE PROTECTION</button>
+  <button class="full" onclick="command('care')">✚ PROVIDE SUSTAINMENT</button>
+  <button class="full" onclick="command('intel')">◈ REQUEST SPACE SUPPORT</button>
+  <button class="full" onclick="command('fighter')">✈ REQUEST FIGHTER SORTIE REVIEW</button>
+ </div>
+
+ <div class="panel">
+  <h3>AIRCRAFT STATUS</h3>
+  <div id="flights"></div>
+ </div>
+</aside>
+</div>
+
+<div id="coach" data-mood="neutral">
+ <div class="coachHead">
+  <div id="face">🫡</div>
+  <div>
+   <b style="color:#6ff4db">OFFICER COACH</b>
+   <div class="muted" id="coachMood">Ready to assist</div>
+  </div>
+ </div>
+ <div id="speech">
+  Welcome! Select a gold FOS marker to begin.
+ </div>
+ <div class="row">
+  <button onclick="coachHint()">WHAT NEXT?</button>
+  <button onclick="coachWhy()">WHY?</button>
+  <button onclick="toggleCoach()">HIDE</button>
+ </div>
+</div>
+
+<div id="modal" class="hidden">
+ <div class="dialog">
+  <h2 id="modalTitle"></h2>
+  <div id="modalBody"></div>
+  <div id="modalActions"></div>
+  <button id="modalClose" onclick="closeModal()">CLOSE</button>
+ </div>
+</div>
+
+<footer>
+ Educational OPS training prototype. Fictional movements,
+ threats and cargo outcomes. Basemap © OpenStreetMap contributors.
+</footer>
+
+<script>
+"use strict";
+
+const $=id=>document.getElementById(id);
+
+const MOB=[
+ ["Kadena AB",26.35,127.77],
+ ["Andersen AFB",13.58,144.93],
+ ["Yokota AB",35.75,139.35],
+ ["Osan AB",37.09,127.03],
+ ["Kunsan AB",35.90,126.62],
+ ["Misawa AB",40.70,141.37]
+];
+
+const FOS=[
+ ["FOS Alpha (fictional)",23.8,130.9,0],
+ ["FOS Bravo (fictional)",16.3,142.1,1],
+ ["FOS Charlie (fictional)",31.9,136.4,2],
+ ["FOS Delta (fictional)",33.4,129.4,3]
+];
+
+const RFI=[
+ ["Crash Fire Rescue","Aircraft emergency response capability"],
+ ["Mobility Support","Aircraft loading, unloading and handling support"],
+ ["Ramp Space","Parking Maximum on Ground (MOG)"],
+ ["Air Traffic Control","Available aircraft traffic coordination"],
+ ["Equipment","Equipment already available at the location"],
+ ["Bed Down","Available personnel accommodation"],
+ ["Fuel","Fuel availability and support"],
+ ["Airfield Security","Site security support"],
+ ["Local Community Support","Local or host-nation support"],
+ ["Medical","Medical support capability"]
+];
+
+const LEVELS={
+ easy:{resources:24,event:25,damage:1,decision:35,limit:270},
+ intermediate:{resources:17,event:17,damage:2,decision:22,limit:220},
+ hard:{resources:12,event:11,damage:3,decision:12,limit:170}
+};
+
+const params=new URLSearchParams(location.search);
+const requested=params.get("mode");
+const mode=LEVELS[requested]?requested:"easy";
+const cfg=LEVELS[mode];
+
+let S,selected=0,speed=1,playing=false;
+let tutorial=-1,challenge=null,deadline=0,previous=0;
+let map,markers=[],aircraft=[],paths=[];
+let peer=null,clients=[],hostConn=null;
+let isHost=false,isClient=false;
+let roster=[],myAssignment=-1,roomId="";
+let lastBroadcast=0;
+
+function initialState(){
+ return {
+  t:0,turn:1,mp:0,pressure:0,
+  resources:cfg.resources,ended:false,
+  touched:false,sent:0,arrived:0,
+  lastEvent:0,reviewed:false,
+  decisions:0,good:0,log:[],mistakes:[],
+  sites:FOS.map(([name,lat,lng,mob],i)=>({
+   name,lat,lng,mob,index:i,
+   rfi:[],supply:0,active:false,
+   protection:0,care:0,disruption:0
+  })),
+  flights:[{
+   id:"PATROL-01",kind:"friendly",
+   from:[29,132],to:[35,143],
+   progress:.2,loop:true
+  }],
+  threat:[]
+ };
+}
+
+function resetMission(){
+ if(isClient)return;
+ S=initialState();
+ selected=0;tutorial=-1;challenge=null;
+ playing=mode!=="easy";
+ $("feed").replaceChildren();
+ $("lesson").classList.add("hidden");
+ $("modal").classList.add("hidden");
+ log("MISSION READY",
+ "Assess a fictional FOS and prepare a cargo movement. "+
+ "The official OPS objective is combined-force mission success.");
+ if(mode==="easy")beginTutorial(false);
+ render();sync();
+}
+
+function coach(mood,text){
+ const faces={
+  neutral:"🫡",good:"😄",wrong:"😟",
+  think:"🤔",alert:"😮"
+ };
+ $("coach").dataset.mood=mood;
+ $("face").textContent=faces[mood]||"🫡";
+ $("speech").textContent=text;
+ $("coachMood").textContent={
+  neutral:"Ready to assist",good:"Good decision",
+  wrong:"Review the order",think:"Think it through",
+  alert:"Situation changed"
+ }[mood]||"Officer Coach";
+}
+
+function toggleCoach(){
+ $("coach").classList.toggle("hidden");
+}
+
+function coachHint(){
+ const s=S.sites[selected];
+ if(s.rfi.length<5)
+  return coach("think","Request five initial RFIs at this FOS. "+
+   "Choose the information that helps you plan.");
+ if(s.supply===0&&!s.active)
+  return coach("think","Request an appropriate cargo movement. "+
+   "The simulation will show the flight arriving.");
+ if(!s.active)
+  return coach("think","You have resources here. "+
+   "Check the prerequisites before establishing capability.");
+ if(!s.protection)
+  return coach("think","This location needs protection. "+
+   "Switch to CAOC and review the support action.");
+ if(!s.care)
+  return coach("think","Sustainment matters. "+
+   "Switch to MOB or MEDCOM to support personnel.");
+ coach("good","Keep monitoring other FOSs and the mission log.");
+}
+
+function coachWhy(){
+ coach("think","OPS links information, requirements, "+
+  "capabilities, timing and mission results. "+
+  "Your decisions need to satisfy the game's prerequisites, "+
+  "not simply generate points.");
+}
+
+function log(title,detail){
+ S.log.unshift({
+  time:Math.floor(S.t),title,detail
+ });
+ S.log=S.log.slice(0,80);
+ const d=document.createElement("div");
+ d.className="entry";
+ const b=document.createElement("b");
+ b.textContent="T+"+Math.floor(S.t)+" | "+title;
+ const p=document.createElement("div");
+ p.textContent=detail;
+ d.append(b,p);
+ $("feed").prepend(d);
+ while($("feed").children.length>55)
+  $("feed").lastChild.remove();
+ $("hint").textContent=title+" — "+detail;
+}
+
+function mistake(name,why,fix){
+ S.mistakes.push({name,why,fix});
+ log("ORDER REVIEW",why);
+ coach("wrong",fix);
+}
+
+function spend(n){
+ if(S.resources<n){
+  mistake("Insufficient practice resources",
+   "The requested action requires more simulated resources.",
+   "Prioritize necessary capabilities and avoid waste.");
+  return false;
+ }
+ S.resources-=n;
+ return true;
+}
+
+function selectedSite(i){
+ selected=i;
+ S.touched=true;
+ render();
+ coach("neutral",S.sites[i].name+
+  " selected. Start by deciding which RFIs you need.");
+ tutorialCheck();
+}
+
+function command(type){
+ if(isClient){
+  if(selected!==myAssignment){
+   coach("wrong","You can only submit commands "+
+    "for your assigned FOS.");
+   return;
+  }
+  if(!hostConn||!hostConn.open)return;
+  hostConn.send({type:"command",op:type,index:selected});
+  return;
+ }
+ applyCommand(type,selected,$("role").value);
+}
+
+function applyCommand(type,i,role){
+ if(S.ended)return;
+ const s=S.sites[i];
+ if(!s)return;
+
+ if(type==="rfi"){
+  showRFIs(i,role);
+  return;
+ }
+
+ if(type==="airlift"){
+  if(!["CAOC","MOB","GM"].includes(role))
+   return mistake("Incorrect role",
+    "This training command is assigned to CAOC/MOB.",
+    "Coordinate the airlift through CAOC or MOB.");
+  if(s.rfi.length<5)
+   return mistake("Insufficient airfield information",
+    "The practice site has fewer than five initial RFIs.",
+    "Select your five initial RFI categories first.");
+  if(!spend(2))return;
+  const start=MOB[s.mob];
+  S.sent++;
+  S.flights.push({
+   id:"CARGO-"+S.sent,kind:"cargo",
+   from:[start[1],start[2]],
+   to:[s.lat,s.lng],
+   progress:0,loop:false,dest:i
+  });
+  log("CARGO DEPARTURE",
+   "A fictional cargo aircraft departed "+start[0]+
+   " toward "+s.name+".");
+  coach("good","Cargo launched. Watch the gold aircraft "+
+   "and verify its arrival before using the resources.");
+ }
+
+ if(type==="activate"){
+  if(!["MOB","CAOC","GM"].includes(role))
+   return mistake("Incorrect role",
+    "This site-establishment action uses MOB coordination.",
+    "Choose MOB or coordinate with CAOC.");
+  if(s.rfi.length<5||s.supply<1)
+   return mistake("Premature FOS establishment",
+    "The training prerequisites have not been met.",
+    "Complete five RFIs and receive the cargo flight first.");
+  if(s.active)return;
+  if(!spend(2))return;
+  s.supply--;
+  s.active=true;
+  log("PRACTICE FOS READY",
+   s.name+" is established for the simplified scenario. "+
+   "No official MP is awarded merely for this action.");
+  coach("good","Good! Now address protection, "+
+   "personnel sustainment and remaining assessment needs.");
+ }
+
+ if(type==="protect"){
+  if(!["CAOC","GM"].includes(role))
+   return mistake("Incorrect role",
+    "The protection practice action is CAOC-managed.",
+    "Switch to CAOC to coordinate this action.");
+  if(!s.active)
+   return mistake("Capability not established",
+    "The site is not yet established in this exercise.",
+    "Establish the site before improving its support.");
+  if(!spend(2))return;
+  s.protection++;
+  coach("good","Protection improved in this training scenario.");
+  log("PROTECTION SUPPORT",
+   s.name+" received a fictional protection improvement.");
+ }
+
+ if(type==="care"){
+  if(!["MOB","MEDCOM","GM"].includes(role))
+   return mistake("Incorrect role",
+    "This action uses MOB or MEDCOM coordination.",
+    "Select MOB or MEDCOM.");
+  if(!s.active)return;
+  if(!spend(2))return;
+  s.care++;
+  S.pressure=Math.max(0,S.pressure-2);
+  log("SUSTAINMENT SUPPORT",
+   "Personnel sustainment improved at "+s.name+".");
+  coach("good","Good support decision. Sustainment "+
+   "helps the team maintain operational capability.");
+ }
+
+ if(type==="intel"){
+  if(!["CSpOC","GM"].includes(role))
+   return mistake("Incorrect role",
+    "This action belongs to CSpOC.",
+    "Switch to CSpOC or coordinate with that team.");
+  log("SPACE SUPPORT REQUEST",
+   "Request recorded. A real OPS effect requires "+
+   "the relevant guide rule and GM adjudication.");
+  coach("think","CSpOC supports mission success, "+
+   "but a generic ISR click does not automatically earn MP.");
+ }
+
+ if(type==="fighter"){
+  log("FIGHTER SORTIE REVIEW",
+   "A qualifying sortie requires the official "+
+   "EXORD/FRAGORD area, appropriate support tasks, "+
+   "fuel, munitions and GM execution adjudication.");
+  coach("think","Do not launch just to collect points. "+
+   "Verify all required conditions first.");
+ }
+
+ render();tutorialCheck();sync();
+}
+
+function showRFIs(i,role){
+ if(!["MOB","CAOC","GM"].includes(role)){
+  mistake("Incorrect role",
+   "Coordinate the airfield RFI through a MOB or CAOC.",
+   "Choose MOB or CAOC.");
+  return;
+ }
+ const s=S.sites[i];
+ $("modalTitle").textContent="AIRFIELD RFIs — "+s.name;
+ $("modalBody").textContent=
+  "Initial planning: choose five categories. "+
+  "After that, the remaining categories can be requested. "+
+  "Sample responses are not official GM results.";
+ const box=$("modalActions");
+ box.replaceChildren();
+
+ RFI.forEach(([name,why],j)=>{
+  const b=document.createElement("button");
+  b.className="choice";
+  b.textContent=(s.rfi.includes(j)?"✓ ":"")+
+   (j+1)+". "+name+" — "+why;
+  b.disabled=s.rfi.includes(j);
+  b.onclick=()=>{
+   if(s.rfi.includes(j))return;
+   s.rfi.push(j);
+   log("RFI ANSWERED — TRAINING",
+    name+" recorded at "+s.name+
+    ". This is an illustrative response.");
+   coach("good","RFI completed. "+
+    "Ask what the answer changes about your mission plan.");
+
+   if(s.rfi.length===5)
+    log("INITIAL FIVE RFIs COMPLETE",
+     "You can now continue the simplified FOS planning workflow.");
+
+   if(s.rfi.length===10){
+    S.mp+=5;
+    log("OFFICIAL-STYLE RFI MP +5",
+     "All ten RFI categories completed. "+
+     "Your guide awards 5 MP for a complete assessment.");
+   }
+   showRFIs(i,role);
+   render();tutorialCheck();sync();
+  };
+  box.appendChild(b);
+ });
+ $("modalClose").textContent="RETURN TO GAME";
+ $("modal").classList.remove("hidden");
+}
+
+function closeModal(){
+ $("modal").classList.add("hidden");
+ $("modalActions").replaceChildren();
+}
+
+function toggle(){
+ if(isClient||S.ended||challenge)return;
+ playing=!playing;
+ render();
+ coach("neutral",playing?
+  "Mission running. Watch aircraft and changing events.":
+  "Mission paused. Review your plan and requirements.");
+ sync();
+}
+
+function moveFlights(dt){
+ for(let i=S.flights.length-1;i>=0;i--){
+  const f=S.flights[i];
+  f.progress+=dt/(f.kind==="cargo"?14:42);
+
+  if(f.progress>=1){
+   if(f.loop){
+    f.progress=0;
+    [f.from,f.to]=[f.to,f.from];
+   }else{
+    S.flights.splice(i,1);
+    S.arrived++;
+    S.sites[f.dest].supply++;
+    log("CARGO ARRIVED",
+     "One practice cargo delivery reached "+
+     S.sites[f.dest].name+".");
+    coach("good","Your cargo arrived! "+
+     "Check the site before establishing capability.");
+   }
+  }
+ }
+}
+
+function eventTurn(){
+ const active=S.sites.filter(x=>x.active);
+ if(!active.length){
+  S.pressure+=cfg.damage;
+  log("EXERCISE PRESSURE",
+   "No practice FOS is established yet.");
+  return;
+ }
+ const s=active[Math.floor(Math.random()*active.length)];
+ challenge={
+  site:s,
+  text:"A fictional operational issue affects "+s.name+
+  ". Which response is most appropriate?"
+ };
+ deadline=performance.now()+cfg.decision*1000;
+ $("modalTitle").textContent="⚠ EXERCISE EVENT";
+ $("modalBody").textContent=challenge.text;
+ $("modalActions").replaceChildren();
+
+ const choices=[
+  "Review the situation, coordinate support and act",
+  "Maintain the plan without reviewing the change",
+  "Ignore the warning entirely"
+ ];
+ choices.forEach((c,i)=>{
+  const b=document.createElement("button");
+  b.className="choice";
+  b.textContent=String.fromCharCode(65+i)+". "+c;
+  b.onclick=()=>resolveEvent(i);
+  $("modalActions").appendChild(b);
+ });
+ $("modalClose").classList.add("hidden");
+ $("modal").classList.remove("hidden");
+
+ S.threat=[{
+  id:"SIM-RED-1",
+  lat:s.lat+2,lng:s.lng+3
+ }];
+ coach("alert","Fictional red threat marker detected. "+
+  "Use the exercise instructions, not assumptions.");
+ log("RED THREAT MARKER",
+  "A fictional adversary aircraft appears for "+
+  "the training event. No real aircraft are being tracked.");
+ render();
+}
+
+function resolveEvent(i){
+ if(!challenge)return;
+ challenge=null;
+ S.decisions++;
+ if(i===0){
+  S.good++;
+  coach("good","You considered the new situation "+
+   "and coordinated a response.");
+  log("PRACTICE EVENT RESPONDED",
+   "Response recorded. Exact official consequences "+
+   "would be adjudicated by the GM.");
+ }else{
+  S.pressure+=cfg.damage*(i===1?1:3);
+  mistake("Unaddressed exercise event",
+   "The practice response left an identified issue unresolved.",
+   "Review the event and coordinate a proportionate response.");
+ }
+ S.threat=[];
+ $("modal").classList.add("hidden");
+ $("modalClose").classList.remove("hidden");
+ render();sync();
+}
+
+function update(dt){
+ if(isClient||!playing||S.ended||challenge)return;
+ S.t+=dt;
+ moveFlights(dt);
+
+ const newTurn=Math.floor(S.t/15)+1;
+ if(newTurn>S.turn){
+  S.turn=newTurn;
+  log("TURN ADVANCED",
+   "Review FOS requirements, resources and "+
+   "the instructor's next-turn instructions.");
+ }
+
+ const e=Math.floor(S.t/cfg.event);
+ if(e>S.lastEvent){
+  S.lastEvent=e;
+  eventTurn();
+ }
+
+ if(S.t>=cfg.limit||S.pressure>=35){
+  S.ended=true;playing=false;
+  log("MISSION COMPLETE / PRACTICE STOP",
+   "Review the AAR. This does not determine "+
+   "the official instructor-defined victory condition.");
+  showAAR();
+ }
+ tutorialCheck();
+ render();
+}
+
+const LESSONS=[
+ ["Choose a Forward Operating Site",
+  "Select a gold diamond on the map.",
+  ()=>S.touched],
+ ["Ask initial RFIs",
+  "Request five information categories at one FOS.",
+  ()=>S.sites.some(s=>s.rfi.length>=5)],
+ ["Plan a cargo movement",
+  "Dispatch a cargo flight to an assessed FOS.",
+  ()=>S.sent>0],
+ ["Observe the flight",
+  "Run the clock until the gold aircraft arrives.",
+  ()=>S.arrived>0],
+ ["Establish capability",
+  "Establish a training capability at the receiving FOS.",
+  ()=>S.sites.some(s=>s.active)],
+ ["Maintain readiness",
+  "Provide protection or sustainment.",
+  ()=>S.sites.some(s=>s.protection+s.care>0)],
+ ["Understand the result",
+  "Open the After-Action Review.",
+  ()=>S.reviewed]
+];
+
+function beginTutorial(reset=true){
+ if(reset)resetMission();
+ tutorial=0;playing=false;
+ $("lesson").classList.remove("hidden");
+ tab("mapPage");
+ tutorialCheck();
+ coach("neutral","I'm your instructor coach. "+
+  "Follow each step to understand what you're doing.");
+}
+
+function tutorialCheck(){
+ if(tutorial<0)return;
+ if(tutorial>=LESSONS.length){
+  $("lessonTitle").textContent="TRAINING COMPLETE";
+  $("lessonText").textContent=
+   "Review the rules and try Intermediate mode.";
+  $("lessonNext").disabled=true;
+  return;
+ }
+ const [title,desc,test]=LESSONS[tutorial];
+ $("lessonTitle").textContent=
+  "STEP "+(tutorial+1)+"/"+LESSONS.length+" — "+title;
+ $("lessonText").textContent=desc;
+ $("lessonNext").disabled=!test();
+}
+
+function nextLesson(){
+ if(tutorial>=0&&LESSONS[tutorial][2]()){
+  tutorial++;tutorialCheck();
+ }
+}
+function endTutorial(){
+ tutorial=-1;
+ $("lesson").classList.add("hidden");
+}
+
+function showAAR(){
+ S.reviewed=true;
+ const div=$("aar");
+ div.replaceChildren();
+ const p=document.createElement("div");
+ const issues=S.mistakes.length?
+  S.mistakes.map((m,i)=>
+   `<p><b>${i+1}. ${m.name}</b><br>
+   What happened: ${m.why}<br>
+   What to do: ${m.fix}</p>`).join(""):
+  "<p>No invalid orders were recorded.</p>";
+
+ p.innerHTML=`
+  <h3>MISSION</h3>
+  <p>Practice the dispersal, establishment and sustainment
+  of fictional FOS locations in the Indo-Pacific region.</p>
+  <h3>YOUR RESULTS</h3>
+  <p>Official-style airfield assessment MP: ${S.mp}</p>
+  <p>FOS training capability: ${S.sites.filter(s=>s.active).length}/4</p>
+  <p>Completed cargo deliveries: ${S.arrived}</p>
+  <p>Timed practice decisions: ${S.good}/${S.decisions}</p>
+  <p>Pressure: ${S.pressure}</p>
+  <h3>YOUR RECORDED MISTAKES</h3>
+  ${issues}
+  <h3>WHAT TO IMPROVE</h3>
+  <p>Review mission orders, request useful RFIs,
+  identify requirements, coordinate aircraft,
+  and sustain the force. The official objective
+  and additional MP are determined by the
+  instructor and Game Master.</p>
+ `;
+ div.appendChild(p);
+ tab("aarPage");
+ tutorialCheck();
+}
+
+function tab(id){
+ ["mapPage","rulesPage","teamPage","aarPage"]
+ .forEach(k=>$(k).classList.toggle("hidden",k!==id));
+ document.querySelectorAll("[data-tab]").forEach(b=>
+  b.classList.toggle("on",b.dataset.tab===id));
+ if(id==="mapPage"&&map)
+  setTimeout(()=>map.invalidateSize(),80);
+}
+
+function initMap(){
+ if(typeof L==="undefined"){
+  $("map").textContent=
+   "Map library failed to load. Check your internet connection.";
+  return;
+ }
+ map=L.map("map",{worldCopyJump:true})
+  .setView([27,135],4);
+
+ L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+   attribution:"© OpenStreetMap contributors",
+   maxZoom:15
+  }
+ ).addTo(map);
+
+ MOB.forEach(([name,lat,lng])=>{
+  const marker=L.circleMarker([lat,lng],{
+   radius:7,color:"#3bd8fa",fillColor:"#126e9a",
+   fillOpacity:1,weight:3
+  }).addTo(map);
+  marker.bindTooltip(name+" — MOB / regional reference");
+ });
+
+ S.sites.forEach((s,i)=>{
+  const marker=L.marker([s.lat,s.lng],{
+   icon:L.divIcon({
+    className:"",
+    html:'<div class="fosDot"></div>',
+    iconSize:[20,20]
+   })
+  }).addTo(map);
+  marker.on("click",()=>selectedSite(i));
+  marker.bindTooltip(s.name);
+ });
+
+ updateMap();
+}
+
+function updateMap(){
+ if(!map||!S)return;
+ aircraft.forEach(m=>map.removeLayer(m));
+ paths.forEach(m=>map.removeLayer(m));
+ aircraft=[];paths=[];
+
+ S.flights.forEach(f=>{
+  const lat=f.from[0]+(f.to[0]-f.from[0])*f.progress;
+  const lng=f.from[1]+(f.to[1]-f.from[1])*f.progress;
+  const color=f.kind==="cargo"?"#ffca76":"#37bffa";
+
+  paths.push(L.polyline([f.from,f.to],{
+   color,weight:2,opacity:.65,dashArray:"7,8"
+  }).addTo(map));
+
+  const icon=L.divIcon({
+   className:"plane",
+   html:`<span style="color:${color}">✈</span>`,
+   iconSize:[34,34],iconAnchor:[17,17]
+  });
+
+  const marker=L.marker([lat,lng],{icon}).addTo(map);
+  marker.bindTooltip(f.id+" — "+f.kind);
+  aircraft.push(marker);
+ });
+
+ S.threat.forEach(t=>{
+  const icon=L.divIcon({
+   className:"plane",
+   html:'<span style="color:#ff526d">✈</span>',
+   iconSize:[34,34],iconAnchor:[17,17]
+  });
+  const marker=L.marker([t.lat,t.lng],{icon}).addTo(map);
+  marker.bindTooltip("FICTIONAL THREAT");
+  aircraft.push(marker);
+ });
+}
+
+function render(){
+ if(!S)return;
+ $("modeLabel").textContent=mode.toUpperCase();
+ $("turn").textContent=S.turn;
+ $("time").textContent=
+  String(Math.floor(S.t/60)).padStart(2,"0")+":"+
+  String(Math.floor(S.t%60)).padStart(2,"0");
+ $("mp").textContent=S.mp;
+ $("pressure").textContent=S.pressure;
+ $("resources").textContent=S.resources;
+ $("active").textContent=S.sites.filter(s=>s.active).length+"/4";
+ $("rfiCount").textContent=S.sites.reduce((n,s)=>n+s.rfi.length,0);
+ $("play").textContent=playing?"Ⅱ PAUSE":"▶ RESUME";
+ $("play").disabled=isClient;
+
+ const s=S.sites[selected];
+ $("selection").innerHTML=`
+  <h2>${s.name}</h2>
+  <p class="muted">Assigned MOB: ${MOB[s.mob][0]}</p>
+  <div class="stat"><span>RFIs</span><strong>${s.rfi.length}/10</strong></div>
+  <div class="stat"><span>Supplies</span><strong>${s.supply}</strong></div>
+  <div class="stat"><span>Ready</span><strong>${s.active?"YES":"NO"}</strong></div>
+  <div class="stat"><span>Protection</span><strong>${s.protection}</strong></div>
+  <div class="stat"><span>Care</span><strong>${s.care}</strong></div>
+ `;
+ $("objectives").innerHTML=`
+  <div class="stat"><span>Five RFIs</span>
+   <strong>${S.sites.filter(s=>s.rfi.length>=5).length}/4</strong></div>
+  <div class="stat"><span>Full assessment</span>
+   <strong>${S.sites.filter(s=>s.rfi.length===10).length}/4</strong></div>
+  <div class="stat"><span>FOS ready</span>
+   <strong>${S.sites.filter(s=>s.active).length}/4</strong></div>
+  <div class="stat"><span>Cargo delivered</span><strong>${S.arrived}</strong></div>
+ `;
+ $("roleHelp").textContent={
+  CAOC:"Coordinates air operations and allocations.",
+  MOB:"Requests RFIs and prepares FOSs.",
+  CSpOC:"Coordinates space-related support.",
+  MEDCOM:"Coordinates medical support.",
+  GM:"Adjudicates exercise results."
+ }[$("role").value];
+
+ $("flights").replaceChildren();
+ S.flights.forEach(f=>{
+  const d=document.createElement("div");
+  d.className="stat";
+  d.textContent=f.id+" — "+Math.floor(f.progress*100)+"%";
+  $("flights").appendChild(d);
+ });
+ updateMap();
+}
+
+// Basic cooperative peer-to-peer rooms.
+// The host maintains game state and assigns FOSs.
+function leaveRoom(){
+ try{if(peer)peer.destroy()}catch(e){}
+ peer=null;clients=[];hostConn=null;
+ isHost=false;isClient=false;
+ roster=[];myAssignment=-1;roomId="";
+ $("roomStatus").textContent="Not connected.";
+ renderRoster();
+}
+
+function renderRoster(){
+ $("roomRoster").replaceChildren();
+ const title=document.createElement("h3");
+ title.textContent=roomId?"ROOM "+roomId:"ROOM PARTICIPANTS";
+ $("roomRoster").appendChild(title);
+ roster.forEach(m=>{
+  const row=document.createElement("div");
+  row.className="member";
+  const label=document.createElement("span");
+  label.textContent=m.name+" — "+
+   (m.index>=0?FOS[m.index][0]:"HOST / COMMAND");
+  row.appendChild(label);
+  $("roomRoster").appendChild(row);
+ });
+}
+
+function hostRoom(){
+ leaveRoom();
+ if(typeof Peer==="undefined"){
+  $("roomStatus").textContent="PeerJS could not load.";
+  return;
+ }
+ roomId="OPS-"+Math.random().toString(36)
+  .slice(2,8).toUpperCase();
+ peer=new Peer(roomId);
+
+ peer.on("open",()=>{
+  isHost=true;
+  roster=[{
+   name:$("nickname").value.trim()||"Host",
+   id:"host",index:-1
+  }];
+  $("roomStatus").textContent="SHARE CODE: "+roomId;
+  renderRoster();
+ });
+
+ peer.on("connection",c=>{
+  clients.push(c);
+  c.on("open",()=>{
+   c.send({type:"welcome"});
+  });
+  c.on("data",m=>{
+   if(m.type==="join"){
+    const taken=roster.map(x=>x.index);
+    let index=[0,1,2,3].find(i=>!taken.includes(i));
+    if(index===undefined)index=-2;
+    roster.push({
+     name:String(m.name||"Member").slice(0,28),
+     id:c.peer,index
+    });
+    c.send({type:"assign",index});
+    sync();renderRoster();
+   }
+   if(m.type==="command"){
+    const member=roster.find(x=>x.id===c.peer);
+    if(!member||member.index<0||
+       member.index!==m.index)return;
+    if(!["rfi","airlift","activate","care"].includes(m.op))
+     return;
+    applyCommand(m.op,member.index,"MOB");
+    sync();
+   }
+   if(m.type==="rfi"){
+    const member=roster.find(x=>x.id===c.peer);
+    if(!member||member.index<0||
+       member.index!==m.index)return;
+    const j=Number(m.category);
+    if(!Number.isInteger(j)||j<0||j>=10)return;
+    if(S.sites[m.index].rfi.includes(j))return;
+    S.sites[m.index].rfi.push(j);
+    if(S.sites[m.index].rfi.length===10)S.mp+=5;
+    log("TEAM RFI RECORDED",
+     "RFI category received from "+member.name+".");
+    render();sync();
+   }
+  });
+  c.on("close",()=>{
+   clients=clients.filter(x=>x!==c);
+   roster=roster.filter(x=>x.id!==c.peer);
+   renderRoster();sync();
+  });
+ });
+ peer.on("error",e=>{
+  $("roomStatus").textContent="Connection problem: "+e.type;
+ });
+}
+
+function joinRoom(){
+ leaveRoom();
+ if(typeof Peer==="undefined")return;
+ const code=$("roomCode").value.trim().toUpperCase();
+ if(!/^OPS-[A-Z0-9]{6}$/.test(code)){
+  $("roomStatus").textContent="Enter a valid room code.";
+  return;
+ }
+ peer=new Peer();
+ peer.on("open",()=>{
+  hostConn=peer.connect(code);
+  hostConn.on("open",()=>{
+   isClient=true;
+   roomId=code;
+   $("roomStatus").textContent="Connected to "+code;
+   hostConn.send({
+    type:"join",
+    name:$("nickname").value.trim()||"Member"
+   });
+  });
+  hostConn.on("data",m=>{
+   if(m.type==="assign"){
+    myAssignment=m.index;
+    if(myAssignment>=0)selected=myAssignment;
+    $("roomStatus").textContent=
+     myAssignment<0?"Connected as observer":
+     "Assigned to "+FOS[myAssignment][0];
+   }
+   if(m.type==="state"){
+    S=m.state;
+    playing=m.playing;
+    roster=m.roster;
+    render();renderRoster();
+    if(!$("modal").classList.contains("hidden"))
+     closeModal();
+   }
+  });
+  hostConn.on("close",()=>{
+   isClient=false;
+   $("roomStatus").textContent="Host disconnected.";
+  });
+ });
+ peer.on("error",e=>{
+  $("roomStatus").textContent="Join error: "+e.type;
+ });
+}
+
+function sync(){
+ if(!isHost)return;
+ clients.forEach(c=>{
+  if(c.open)c.send({
+   type:"state",state:S,playing,roster
+  });
+ });
+}
+
+function frame(now){
+ if(!previous)previous=now;
+ const dt=Math.min((now-previous)/1000,.05);
+ previous=now;
+
+ if(challenge&&!isClient&&now>=deadline)
+  resolveEvent(-1);
+
+ update(dt*speed*3);
+
+ if(!isClient&&map)updateMap();
+
+ if(isHost&&now-lastBroadcast>350){
+  lastBroadcast=now;
+  sync();
+ }
+ requestAnimationFrame(frame);
+}
+
+resetMission();
+initMap();
+
+if(requested==="learn")tab("rulesPage");
+if(requested==="team")tab("teamPage");
+if(mode==="easy")beginTutorial(false);
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
