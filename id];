@@ -1,0 +1,43 @@
+    }
+  }
+}
+
+export const STATION_ROLES = ['MOB', 'CAOC', 'CSpOC', 'MEDCOM'];
+
+export const SITE_DEFS = [
+  { id: 'main-base', name: 'MAIN BASE', x: 120, y: 240, kind: 'base' },
+  { id: 'fos-lantern', name: 'FOS LANTERN', x: 410, y: 170, kind: 'site' },
+  { id: 'harbor', name: 'HARBOR NODAL', x: 620, y: 260, kind: 'hub' },
+  { id: 'med-nest', name: 'MED NEST', x: 500, y: 330, kind: 'medical' },
+  { id: 'north-ridge', name: 'NORTH RIDGE', x: 300, y: 90, kind: 'ridge' },
+];
+
+export const AVAILABLE_RESOURCES = [
+  { id: 'fuel-truck', name: 'Fuel Truck', kind: 'support', qty: 2 },
+  { id: 'security-team', name: 'Security Team', kind: 'security', qty: 1 },
+  { id: 'cargo-pallet', name: 'Cargo Pallet', kind: 'logistics', qty: 3 },
+  { id: 'med-team', name: 'Medical Team', kind: 'medical', qty: 1 },
+];
+
+export const OBJECTIVE_TEMPLATE = {
+  id: 'fos-lantern-establish',
+  title: 'Establish FOS LANTERN',
+  phase: 'PLANNING',
+  station: 'MOB',
+  status: 'ACTIVE',
+  description: 'Prepare the FOS for mission support by confirming access, allocating sustainment, and approving lift support.',
+  requirements: [
+    { id: 'rfi', label: 'RFI received for access and fuel support', satisfied: false },
+    { id: 'fuel', label: 'Assign 1 Fuel Truck to FOS LANTERN', satisfied: false },
+    { id: 'caoc', label: 'AI CAOC approves the support package', satisfied: false },
+    { id: 'submit', label: 'Submit the task and resolve the turn', satisfied: false },
+  ],
+};
+
+export const RFI_CATALOG = [
+  'Access route to the FOS',
+  'Fuel availability and distribution',
+  'Ramp space utilization',
+  'Security posture and patrol cycle',
+  'Medical evacuation readiness',
+];
