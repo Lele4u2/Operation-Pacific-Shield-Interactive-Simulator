@@ -1,0 +1,792 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OPS | Live Command Simulator</title>
+<style>
+:root{
+ --bg:#06111d;--panel:#102338;--border:#30546a;
+ --cyan:#64e0ff;--green:#79efb9;--gold:#ffd58e;
+ --red:#ff7d91;--text:#edf7ff;--muted:#a1b8cd
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:13px system-ui,Arial}
+button{background:#1b3a50;color:white;border:1px solid #42657a;border-radius:5px;padding:10px;cursor:pointer;font:inherit}
+button:hover{border-color:var(--cyan)}
+button.active,.primary{background:#0d809b;border-color:var(--cyan)}
+button:disabled{opacity:.45;cursor:not-allowed}
+header{padding:14px 18px;background:#071725;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header strong{font-size:19px;letter-spacing:2px}
+header strong span{color:var(--cyan)}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:8px;border:1px solid var(--border);border-radius:5px;font:12px monospace}
+.pill b{color:var(--gold)}
+.shell{display:grid;grid-template-columns:240px minmax(0,1fr) 260px;gap:10px;padding:10px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+h3{font-size:12px;letter-spacing:1px;color:var(--cyan);margin:0 0 12px}
+.full{display:block;width:100%;margin:7px 0;text-align:left}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.row button{flex:1}
+.stat{display:flex;justify-content:space-between;border-bottom:1px solid #2c4c60;padding:9px 0;gap:10px}
+.stat b{color:var(--gold)}
+.muted{color:var(--muted);line-height:1.6}
+.notice{background:#15354a;border-left:3px solid var(--cyan);padding:12px;line-height:1.6}
+#map{width:100%;height:530px;display:block;background:#07283d;border:1px solid #416b83;border-radius:7px;touch-action:none;cursor:crosshair}
+#feed{height:210px;overflow:auto}
+.entry{border-bottom:1px solid #2c4c60;padding:9px 0;line-height:1.5}
+.entry b{color:var(--gold)}
+#tutorial{background:#123a4a;border:1px solid var(--cyan);padding:15px;border-radius:7px;margin-top:12px}
+#tutorial[hidden]{display:none}
+#tutorial p{line-height:1.7}
+#modal{display:none;position:fixed;inset:0;background:#020913e8;z-index:20;align-items:center;justify-content:center;padding:15px}
+#modal.open{display:flex}
+.modalbox{width:min(700px,100%);max-height:85vh;overflow:auto;background:#10263a;border:1px solid #4b839c;border-radius:12px;padding:25px;line-height:1.7}
+.modalbox h2{color:var(--cyan)}
+a{color:var(--cyan)}
+@media(max-width:1100px){.shell{grid-template-columns:200px 1fr}.right{grid-column:1/-1}}
+@media(max-width:700px){.shell{display:block}#map{height:390px}}
+</style>
+</head>
+<body>
+
+<header>
+ <div>
+  <strong>OPS <span>// LIVE COMMAND</span></strong>
+  <div class="muted">UNOFFICIAL INTERACTIVE TRAINING GAME</div>
+ </div>
+ <div class="stats">
+  <div class="pill">TIME <b id="clock">00:00</b></div>
+  <div class="pill">TURN <b id="turn">1</b></div>
+  <div class="pill">MP <b id="points">0</b></div>
+  <div class="pill">PRESSURE <b id="pressure">0</b></div>
+  <div class="pill" id="difficulty">BEGINNER</div>
+ </div>
+</header>
+
+<div class="shell">
+<aside>
+ <div class="panel">
+  <h3>MISSION COMMAND</h3>
+  <div class="notice" id="summary">
+   Establish forward operating sites and sustain the exercise force.
+  </div>
+  <div class="stat"><span>Mission target</span><b id="goal"></b></div>
+  <div class="stat"><span>Credits</span><b id="credits"></b></div>
+  <div class="stat"><span>Active FOS</span><b id="operational"></b></div>
+
+  <button class="full primary" id="play" onclick="toggle()">Ⅱ PAUSE</button>
+  <div class="row">
+   <button onclick="speed=1">1×</button>
+   <button onclick="speed=2">2×</button>
+   <button onclick="speed=4">4×</button>
+  </div>
+  <button class="full" onclick="startTutorial()">◈ GUIDED TUTORIAL</button>
+  <button class="full" onclick="review()">▤ AFTER-ACTION REVIEW</button>
+  <button class="full" onclick="restart()">↻ RESTART EXERCISE</button>
+  <a href="./index.html">← RETURN TO HOME</a>
+ </div>
+
+ <div class="panel">
+  <h3>COMMAND ROLES</h3>
+  <p class="muted">Practice each command role locally.</p>
+  <div class="row">
+   <button data-role="CAOC" class="active">CAOC</button>
+   <button data-role="MOB">MOB</button>
+   <button data-role="CSpOC">CSpOC</button>
+   <button data-role="MEDCOM">MEDCOM</button>
+  </div>
+  <p class="muted" id="roleHint"></p>
+ </div>
+
+ <div class="panel">
+  <h3>MISSION OBJECTIVES</h3>
+  <div id="objectives"></div>
+ </div>
+</aside>
+
+<main>
+ <div class="panel">
+  <div class="row">
+   <h3 style="flex:4">INDO-PACIFIC // LIVE EXERCISE BOARD</h3>
+   <button onclick="zoom(1.2)">＋</button>
+   <button onclick="zoom(.8)">－</button>
+   <button onclick="resetView()">CENTER</button>
+  </div>
+  <canvas id="map"></canvas>
+  <div class="notice" id="hint">
+   Mission started! Select a green forward operating site.
+  </div>
+
+  <div id="tutorial" hidden>
+   <h3 id="lessonTitle"></h3>
+   <p id="lessonText"></p>
+   <button id="nextLesson" onclick="nextLesson()" disabled>
+    COMPLETE THIS STEP
+   </button>
+   <button onclick="stopTutorial()">EXIT TUTORIAL</button>
+  </div>
+ </div>
+
+ <div class="panel">
+  <h3>LIVE EVENT FEED — WHAT HAPPENED AND WHY</h3>
+  <div id="feed" role="log" aria-live="polite"></div>
+ </div>
+</main>
+
+<aside class="right">
+ <div class="panel">
+  <h3>SELECTED FORWARD SITE</h3>
+  <div id="selection"></div>
+  <h3 style="margin-top:20px">COMMAND ACTIONS</h3>
+  <button class="full" onclick="action('assess')">◉ REQUEST RFI / ASSESS SITE</button>
+  <button class="full" onclick="action('airlift')">✈ DISPATCH SUPPLY AIRLIFT</button>
+  <button class="full" onclick="action('activate')">⬡ ESTABLISH FOS CAPABILITY</button>
+  <button class="full" onclick="action('defend')">◇ IMPROVE PROTECTION</button>
+  <button class="full" onclick="action('care')">✚ PROVIDE SUSTAINMENT / CARE</button>
+  <button class="full" onclick="action('intel')">◈ REQUEST SPACE / ISR SUPPORT</button>
+  <p class="muted">
+   The mechanics and costs are illustrative training rules,
+   not official OPS adjudication.
+  </p>
+ </div>
+ <div class="panel">
+  <h3>EXERCISE ADVISOR</h3>
+  <p id="advisor" class="muted"></p>
+  <div class="stat"><span>Active airlifts</span><b id="flights">0</b></div>
+  <div class="stat"><span>Events</span><b id="events">0</b></div>
+  <div class="stat"><span>Status</span><b id="status">LIVE</b></div>
+ </div>
+</aside>
+</div>
+
+<div id="modal">
+ <div class="modalbox">
+  <h2 id="modalTitle"></h2>
+  <div id="modalBody"></div>
+  <button class="primary" onclick="closeModal()">CONTINUE</button>
+ </div>
+</div>
+
+<script>
+"use strict";
+
+const $=id=>document.getElementById(id);
+const canvas=$("map");
+const ctx=canvas.getContext("2d");
+const W=1200,H=740;
+
+const params=new URLSearchParams(location.search);
+const requested=params.get("level");
+const level=["beginner","intermediate","expert"].includes(requested)
+ ? requested : "beginner";
+
+const configs={
+ beginner:{goal:85,credits:24,event:18,damage:1,limit:300},
+ intermediate:{goal:110,credits:19,event:12,damage:2,limit:240},
+ expert:{goal:145,credits:15,event:8,damage:3,limit:200}
+};
+
+const config=configs[level];
+
+let S,selected=0,role="CAOC",playing=true,speed=1;
+let camera={x:0,y:0,z:1};
+let drag=null,last=0,tutorialStep=-1;
+
+const locations=[
+ ["FOS Alpha",830,270],
+ ["FOS Bravo",955,425],
+ ["FOS Charlie",660,390],
+ ["FOS Delta",1010,160]
+];
+
+const lessons=[
+ ["Select a site",
+  "Click a green FOS marker on the map.",
+  ()=>S.selectedOnce],
+ ["Assess the site",
+  "Choose CAOC or MOB and press REQUEST RFI / ASSESS SITE.",
+  ()=>S.sites.some(s=>s.assessed)],
+ ["Dispatch an aircraft",
+  "Choose an assessed site. Press DISPATCH SUPPLY AIRLIFT.",
+  ()=>S.sent>0],
+ ["Activate a forward site",
+  "Resume time, wait for supplies to arrive, then activate the site.",
+  ()=>S.sites.some(s=>s.active)],
+ ["Improve protection",
+  "Choose an active site, switch to CAOC and improve protection.",
+  ()=>S.sites.some(s=>s.protection>0)],
+ ["Earn mission points",
+  "Keep the mission running so an active site earns mission points.",
+  ()=>S.points>0],
+ ["Review your performance",
+  "Open AFTER-ACTION REVIEW.",
+  ()=>S.reviewed]
+];
+
+function reset(){
+ S={
+  time:0,turn:1,points:0,pressure:0,
+  credits:config.credits,ended:false,
+  flights:[],sent:0,events:0,reviewed:false,
+  selectedOnce:false,spaceHelp:false,
+  sites:locations.map(([name,x,y])=>({
+   name,x,y,assessed:false,supplies:0,
+   active:false,protection:0,care:0,
+   disrupted:0
+  }))
+ };
+ selected=0;
+ role="CAOC";
+ playing=true;
+ speed=1;
+ tutorialStep=-1;
+ $("tutorial").hidden=true;
+ $("feed").innerHTML="";
+ log("MISSION STARTED",
+  "The exercise clock is live. Assess a site, send supplies, and establish operating capability.");
+ renderUI();
+}
+
+function log(title,explanation){
+ S.events++;
+ const entry=document.createElement("div");
+ entry.className="entry";
+ const b=document.createElement("b");
+ b.textContent="T+"+Math.floor(S.time)+" | "+title;
+ const p=document.createElement("div");
+ p.textContent=explanation;
+ entry.append(b,p);
+ $("feed").prepend(entry);
+ $("hint").textContent=title+" — "+explanation;
+ $("advisor").textContent=explanation;
+ while($("feed").children.length>50)
+  $("feed").lastChild.remove();
+}
+
+function chooseSite(i){
+ selected=i;
+ S.selectedOnce=true;
+ log("SITE SELECTED",
+  S.sites[i].name+" is selected. Review its condition and choose a command action.");
+ renderUI();
+ checkTutorial();
+}
+
+function cost(n){
+ if(S.credits<n){
+  log("INSUFFICIENT RESOURCES",
+  "This action needs "+n+" credits. Your resource reserve is too low.");
+  return false;
+ }
+ S.credits-=n;
+ return true;
+}
+
+function action(type){
+ if(S.ended)return;
+
+ const s=S.sites[selected];
+
+ if(type==="assess"){
+  if(!["CAOC","MOB"].includes(role))
+   return deny("Use CAOC or MOB to assess a site.");
+  if(s.assessed)return deny("This site has already been assessed.");
+  s.assessed=true;
+  log("RFI COMPLETED",
+   "Requirements at "+s.name+" are now known. Assessment reduces uncertainty before resources are committed.");
+ }
+
+ if(type==="airlift"){
+  if(!["CAOC","MOB"].includes(role))
+   return deny("Use CAOC or MOB to dispatch cargo.");
+  if(!s.assessed)return deny("Assess the location before sending supplies.");
+  if(!cost(2))return;
+  const id="AIRLIFT-"+(S.sent+1);
+  S.sent++;
+  S.flights.push({
+   id,to:selected,x:245,y:530,progress:0
+  });
+  log("AIRLIFT DEPARTED",
+   id+" is traveling to "+s.name+". Watch the aircraft move across the map.");
+ }
+
+ if(type==="activate"){
+  if(role!=="MOB"&&role!=="CAOC")
+   return deny("Use MOB or CAOC to activate a site.");
+  if(!s.assessed)return deny("Assess the site first.");
+  if(s.supplies<1)return deny("One supply delivery is required first.");
+  if(s.active)return deny("This site is already active.");
+  if(!cost(3))return;
+  s.supplies--;
+  s.active=true;
+  S.points+=12;
+  log("FOS OPERATIONAL",
+   s.name+" is operational. It will generate mission points while sustained.");
+ }
+
+ if(type==="defend"){
+  if(role!=="CAOC")
+   return deny("Select CAOC to coordinate protection.");
+  if(!s.active)return deny("Activate the site first.");
+  if(!cost(2))return;
+  s.protection++;
+  log("PROTECTION IMPROVED",
+   s.name+" is better protected against computer-generated disruptions.");
+ }
+
+ if(type==="care"){
+  if(!["MOB","MEDCOM"].includes(role))
+   return deny("Use MOB or MEDCOM for sustainment and care.");
+  if(!s.active)return deny("Activate the site first.");
+  if(!cost(2))return;
+  s.care++;
+  S.pressure=Math.max(0,S.pressure-3);
+  log("SUSTAINMENT IMPROVED",
+   "Health, welfare, and sustainment reduce pressure on the exercise force.");
+ }
+
+ if(type==="intel"){
+  if(role!=="CSpOC")
+   return deny("Select CSpOC to coordinate simulated space and ISR support.");
+  if(!cost(2))return;
+  S.spaceHelp=true;
+  S.points+=4;
+  log("ISR SUPPORT RECEIVED",
+   "Additional awareness has reduced uncertainty and provided practice mission points.");
+ }
+
+ renderUI();
+ checkTutorial();
+}
+
+function deny(msg){
+ log("ACTION NOT AVAILABLE",msg);
+}
+
+function step(dt){
+ if(!playing||S.ended)return;
+ S.time+=dt;
+
+ for(let i=S.flights.length-1;i>=0;i--){
+  const f=S.flights[i];
+  f.progress=Math.min(1,f.progress+dt/12);
+  const dest=S.sites[f.to];
+  f.x=245+(dest.x-245)*f.progress;
+  f.y=530+(dest.y-530)*f.progress;
+
+  if(f.progress>=1){
+   dest.supplies++;
+   S.flights.splice(i,1);
+   log("SUPPLY DELIVERED",
+    f.id+" reached "+dest.name+". You can now use its resources to activate the site.");
+  }
+ }
+
+ const turn=Math.floor(S.time/15)+1;
+
+ if(turn>S.turn){
+  S.turn=turn;
+  for(const s of S.sites){
+   if(s.active){
+    const earning=Math.max(1,4-s.disrupted);
+    S.points+=earning;
+    if(s.care===0)
+     S.pressure+=1;
+    else
+     S.pressure=Math.max(0,S.pressure-1);
+    s.disrupted=Math.max(0,s.disrupted-1);
+   }
+  }
+  log("TURN COMPLETED",
+   "Operational sites contributed mission points. Unprotected or poorly sustained sites may generate additional pressure.");
+ }
+
+ const eventInterval=config.event;
+ const eventTick=Math.floor(S.time/eventInterval);
+
+ if(eventTick>0&&eventTick>S.lastEvent){
+  S.lastEvent=eventTick;
+  enemyEvent();
+ }
+
+ if(S.points>=config.goal)finish(true);
+ else if(S.time>=config.limit||S.pressure>=45)
+  finish(false);
+
+ renderUI();
+ checkTutorial();
+}
+
+function enemyEvent(){
+ const active=S.sites.filter(s=>s.active);
+ if(active.length===0){
+  S.pressure+=config.damage;
+  log("COMPUTER OPPONENT",
+   "Operational uncertainty is increasing. You have not yet established an active forward site.");
+  return;
+ }
+
+ const target=active[Math.floor(Math.random()*active.length)];
+ const roll=Math.random();
+
+ if(roll<.5){
+  const effect=Math.max(0,config.damage-target.protection);
+  target.disrupted+=effect;
+  S.pressure+=effect*2;
+  log("OPPOSING FORCE DISRUPTION",
+   target.name+" experienced simulated disruption. Protection reduces its effect.");
+ }else{
+  const effect=Math.max(0,config.damage-target.care);
+  S.pressure+=effect;
+  log("SUSTAINMENT CHALLENGE",
+   target.name+" is facing a support challenge. Medical care and sustainment reduce mission pressure.");
+ }
+}
+
+function finish(success){
+ if(S.ended)return;
+ S.ended=true;
+ playing=false;
+ log(success?"MISSION OBJECTIVE MET":"EXERCISE ENDED",
+  success?"Your force reached the illustrative mission-point goal.":
+  "The time limit or pressure threshold was reached.");
+ review();
+}
+
+function toggle(){
+ if(S.ended)return;
+ playing=!playing;
+ log(playing?"MISSION RESUMED":"MISSION PAUSED",
+  playing?"The simulation clock and opponent are active.":
+  "You may review the situation and issue orders while paused.");
+ renderUI();
+}
+
+function review(){
+ S.reviewed=true;
+ $("modalTitle").textContent="AFTER-ACTION REVIEW";
+ $("modalBody").innerHTML=`
+ <p><b>Difficulty:</b> ${level.toUpperCase()}</p>
+ <p><b>Mission points:</b> ${S.points} / ${config.goal}</p>
+ <p><b>Active FOS:</b> ${S.sites.filter(s=>s.active).length} / 4</p>
+ <p><b>Airlifts dispatched:</b> ${S.sent}</p>
+ <p><b>Exercise pressure:</b> ${S.pressure}</p>
+ <p><b>Result:</b> ${S.ended?(S.points>=config.goal?"SUCCESS":"GOAL NOT MET"):"IN PROGRESS"}</p>
+ <h3>COMMANDER DEBRIEF</h3>
+ <p>Did you assess the sites before sending resources?</p>
+ <p>Did you establish sustainment and protection?</p>
+ <p>How did your resource allocation affect the outcome?</p>
+ <p>What would you do differently in the next run?</p>
+ <p><small>Scoring is illustrative, not official OPS adjudication.</small></p>`;
+ $("modal").classList.add("open");
+ checkTutorial();
+}
+
+function closeModal(){
+ $("modal").classList.remove("open");
+}
+
+function restart(){
+ if(confirm("Restart this training mission?"))reset();
+}
+
+function startTutorial(){
+ reset();
+ playing=false;
+ tutorialStep=0;
+ $("tutorial").hidden=false;
+ log("TUTORIAL ACTIVATED",
+  "Follow each step. The tutorial pauses the clock initially so you can learn.");
+ showLesson();
+}
+
+function stopTutorial(){
+ tutorialStep=-1;
+ $("tutorial").hidden=true;
+}
+
+function showLesson(){
+ if(tutorialStep<0)return;
+ if(tutorialStep>=lessons.length){
+  $("lessonTitle").textContent="TUTORIAL COMPLETE";
+  $("lessonText").textContent="You have practiced the major controls. Continue playing or restart at a higher difficulty.";
+  $("nextLesson").disabled=true;
+  $("nextLesson").textContent="COMPLETED";
+  return;
+ }
+ const l=lessons[tutorialStep];
+ $("lessonTitle").textContent=
+  "STEP "+(tutorialStep+1)+" / "+lessons.length+" — "+l[0];
+ $("lessonText").textContent=l[1];
+ const done=l[2]();
+ $("nextLesson").disabled=!done;
+ $("nextLesson").textContent=done?"NEXT STEP →":"COMPLETE THIS STEP";
+}
+
+function checkTutorial(){
+ if(tutorialStep>=0)showLesson();
+}
+
+function nextLesson(){
+ if(tutorialStep>=0&&lessons[tutorialStep][2]()){
+  tutorialStep++;
+  showLesson();
+ }
+}
+
+function renderUI(){
+ $("clock").textContent=
+  String(Math.floor(S.time/60)).padStart(2,"0")+":"+
+  String(Math.floor(S.time%60)).padStart(2,"0");
+ $("turn").textContent=S.turn;
+ $("points").textContent=S.points;
+ $("pressure").textContent=S.pressure;
+ $("credits").textContent=S.credits;
+ $("goal").textContent=config.goal+" MP";
+ $("difficulty").textContent=level.toUpperCase();
+ $("operational").textContent=
+  S.sites.filter(s=>s.active).length+" / 4";
+ $("flights").textContent=S.flights.length;
+ $("events").textContent=S.events;
+ $("status").textContent=S.ended?"FINISHED":playing?"LIVE":"PAUSED";
+ $("play").textContent=playing?"Ⅱ PAUSE":"▶ RESUME";
+
+ $("summary").textContent=
+  "Target: "+config.goal+
+  " practice mission points. Establish and sustain forward sites.";
+
+ const s=S.sites[selected];
+
+ $("selection").innerHTML=`
+ <div class="stat"><span>Site</span><b>${s.name}</b></div>
+ <div class="stat"><span>Assessment</span><b>${s.assessed?"DONE":"UNKNOWN"}</b></div>
+ <div class="stat"><span>Supplies</span><b>${s.supplies}</b></div>
+ <div class="stat"><span>Status</span><b>${s.active?"OPERATIONAL":"NOT READY"}</b></div>
+ <div class="stat"><span>Protection</span><b>${s.protection}</b></div>
+ <div class="stat"><span>Care</span><b>${s.care}</b></div>
+ <div class="stat"><span>Disruption</span><b>${s.disrupted}</b></div>`;
+
+ $("objectives").innerHTML=`
+ <div class="stat"><span>Assessed</span><b>${S.sites.filter(s=>s.assessed).length}/4</b></div>
+ <div class="stat"><span>Active</span><b>${S.sites.filter(s=>s.active).length}/4</b></div>
+ <div class="stat"><span>Airlifts</span><b>${S.sent}</b></div>
+ <div class="stat"><span>Points</span><b>${S.points}/${config.goal}</b></div>`;
+
+ $("roleHint").textContent={
+  CAOC:"CAOC coordinates assessment, mobility and protection.",
+  MOB:"MOB manages airlift, site activation and sustainment.",
+  CSpOC:"CSpOC provides simulated awareness and ISR support.",
+  MEDCOM:"MEDCOM focuses on health, welfare and support."
+ }[role];
+
+ document.querySelectorAll("[data-role]").forEach(b=>{
+  b.classList.toggle("active",b.dataset.role===role);
+ });
+}
+
+function resize(){
+ const d=window.devicePixelRatio||1;
+ const w=canvas.clientWidth,h=canvas.clientHeight;
+ if(canvas.width!==Math.round(w*d)||canvas.height!==Math.round(h*d)){
+  canvas.width=Math.round(w*d);
+  canvas.height=Math.round(h*d);
+ }
+ ctx.setTransform(d,0,0,d,0,0);
+ return {w,h};
+}
+
+function hex(x,y,r){
+ ctx.beginPath();
+ for(let i=0;i<6;i++){
+  const a=i*Math.PI/3;
+  if(i===0)ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a));
+  else ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
+ }
+ ctx.closePath();
+}
+
+function draw(){
+ const {w,h}=resize();
+ ctx.fillStyle="#08283d";
+ ctx.fillRect(0,0,w,h);
+ ctx.save();
+ ctx.translate(camera.x,camera.y);
+ ctx.scale(camera.z,camera.z);
+
+ // Fictional ocean and island terrain
+ ctx.fillStyle="#174955";
+ ctx.beginPath();
+ ctx.moveTo(0,0);ctx.lineTo(270,0);
+ ctx.lineTo(330,240);ctx.lineTo(205,510);
+ ctx.lineTo(0,550);ctx.closePath();ctx.fill();
+
+ ctx.beginPath();
+ ctx.moveTo(1000,0);ctx.lineTo(1200,0);
+ ctx.lineTo(1200,H);ctx.lineTo(1090,690);
+ ctx.lineTo(955,350);ctx.closePath();ctx.fill();
+
+ // Hexagonal exercise grid
+ ctx.strokeStyle="#47708945";
+ ctx.lineWidth=1;
+ for(let y=0;y<H+70;y+=65){
+  for(let x=0;x<W+100;x+=112){
+   hex(x+(Math.floor(y/65)%2)*56,y,65);
+   ctx.stroke();
+  }
+ }
+
+ ctx.fillStyle="#aac9d8";
+ ctx.font="12px monospace";
+ ctx.fillText("FICTIONAL PACIFIC EXERCISE MAP",25,28);
+
+ // Main Operating Base
+ ctx.fillStyle="#64e0ff";
+ ctx.beginPath();
+ ctx.arc(245,530,17,0,Math.PI*2);
+ ctx.fill();
+ ctx.font="bold 13px monospace";
+ ctx.fillText("MOB / AIRLIFT HUB",170,575);
+
+ // Forward sites
+ S.sites.forEach((s,i)=>{
+  ctx.strokeStyle=s.active?"#79efb9":"#50c89b";
+  ctx.lineWidth=i===selected?4:2;
+  hex(s.x,s.y,28);
+  ctx.stroke();
+  ctx.fillStyle=s.active?"#44bd91":"#184747";
+  hex(s.x,s.y,17);
+  ctx.fill();
+
+  if(i===selected){
+   ctx.strokeStyle="#ffd58e";
+   ctx.beginPath();
+   ctx.arc(s.x,s.y,42,0,Math.PI*2);
+   ctx.stroke();
+  }
+
+  ctx.fillStyle="white";
+  ctx.font="bold 12px monospace";
+  ctx.fillText(s.name,s.x-48,s.y+53);
+
+  if(s.disrupted){
+   ctx.fillStyle="#ff7d91";
+   ctx.fillText("! DISRUPTED",s.x-42,s.y-44);
+  }
+ });
+
+ // Animated aircraft
+ for(const f of S.flights){
+  const target=S.sites[f.to];
+
+  ctx.strokeStyle="#70e0ff80";
+  ctx.setLineDash([8,7]);
+  ctx.beginPath();
+  ctx.moveTo(245,530);
+  ctx.lineTo(target.x,target.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.save();
+  ctx.translate(f.x,f.y);
+  ctx.rotate(Math.atan2(target.y-530,target.x-245)+Math.PI/2);
+  ctx.fillStyle="#ffd58e";
+  ctx.beginPath();
+  ctx.moveTo(0,-16);
+  ctx.lineTo(6,1);
+  ctx.lineTo(15,9);
+  ctx.lineTo(3,7);
+  ctx.lineTo(0,15);
+  ctx.lineTo(-3,7);
+  ctx.lineTo(-15,9);
+  ctx.lineTo(-6,1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+ }
+
+ ctx.fillStyle="#ff8b9b";
+ ctx.font="12px monospace";
+ ctx.fillText("COMPUTER OPPOSITION",1010,90);
+ ctx.restore();
+}
+
+function zoom(n){
+ camera.z=Math.max(.55,Math.min(2.6,camera.z*n));
+}
+
+function resetView(){
+ camera={x:0,y:0,z:1};
+}
+
+function getWorld(e){
+ const r=canvas.getBoundingClientRect();
+ return {
+  x:(e.clientX-r.left-camera.x)/camera.z,
+  y:(e.clientY-r.top-camera.y)/camera.z
+ };
+}
+
+canvas.addEventListener("pointerdown",e=>{
+ drag={x:e.clientX,y:e.clientY,
+       cx:camera.x,cy:camera.y,moved:false};
+ canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener("pointermove",e=>{
+ if(!drag)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+ if(Math.hypot(dx,dy)>6)drag.moved=true;
+ if(drag.moved){
+  camera.x=drag.cx+dx;
+  camera.y=drag.cy+dy;
+ }
+});
+
+canvas.addEventListener("pointerup",e=>{
+ if(!drag)return;
+ const moved=drag.moved;
+ drag=null;
+ if(moved)return;
+
+ const p=getWorld(e);
+ const i=S.sites.findIndex(s=>
+  Math.hypot(s.x-p.x,s.y-p.y)<50);
+
+ if(i>=0)chooseSite(i);
+});
+
+canvas.addEventListener("wheel",e=>{
+ e.preventDefault();
+ zoom(e.deltaY<0?1.12:.89);
+},{passive:false});
+
+document.querySelectorAll("[data-role]").forEach(b=>{
+ b.onclick=()=>{
+  role=b.dataset.role;
+  log("COMMAND ROLE SELECTED",
+   "You are now practicing "+role+" decisions.");
+  renderUI();
+ };
+});
+
+let accumulator=0;
+
+function frame(t){
+ if(!last)last=t;
+ const dt=Math.min((t-last)/1000,.06);
+ last=t;
+
+ step(dt*speed*3);
+ draw();
+ requestAnimationFrame(frame);
+}
+
+reset();
+S.lastEvent=0;
+if(params.get("tutorial")==="1")startTutorial();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
