@@ -1,0 +1,239 @@
+import { createMissionState, pushLog, pushMessage } from './state.js';
+import { assignResource, approveTask, completeTurn, requestRFI } from './rules.js';
+import { runAiSupport } from './ai.js';
+import { SITE_DEFS, STATION_ROLES, AVAILABLE_RESOURCES, RFI_CATALOG } from '../game/config.js';
+
+const app = document.querySelector('#app');
+
+let state = createMissionState({ role: 'MOB', difficulty: 'guided', mode: 'solo' });
+let selectedStation = 'MOB';
+
+function render() {
+  const objective = state.objectives.find((item) => item.id === state.selectedObjectiveId) || state.objectives[0];
+  const site = state.sites.find((item) => item.id === state.selectedSiteId) || state.sites[0];
+
+  app.innerHTML = `
+    <div class="ops-shell">
+      <header class="topbar">
+        <div class="title-wrap">
+          <div class="eyebrow">OPERATION PACIFIC SHIELD</div>
+          <h1>APEX // Pacific Shield</h1>
+        </div>
+        <div class="hud">
+          <div><span>ROLE</span><strong>${selectedStation}</strong></div>
+          <div><span>TURN</span><strong>${state.turn}</strong></div>
+          <div><span>PHASE</span><strong>${state.phase}</strong></div>
+          <div><span>SCORE</span><strong>${state.debrief ? state.debrief.score : 0}</strong></div>
+        </div>
+      </header>
+
+      <main class="game-grid">
+        <aside class="left-panel panel">
+          <div class="panel-section">
+            <div class="eyebrow">COMMAND AUTH</div>
+            <h2>${selectedStation}</h2>
+            <p class="soft-text">Mission station controls and operational authority.</p>
+            <button class="primary" data-action="next-turn">RESOLVE TURN</button>
+            <button data-action="save">SAVE</button>
+            <button data-action="reset">RESET</button>
+          </div>
+
+          <div class="panel-section">
+            <div class="eyebrow">MISSION GOALS</div>
+            <ul class="objective-list">
+              ${state.objectives.map((item) => `
+                <li class="objective ${item.id === objective.id ? 'selected' : ''}" data-objective-id="${item.id}">
+                  <span class="status-dot ${item.status === 'COMPLETE' ? 'done' : 'open'}"></span>
+                  <div>
+                    <strong>${item.title}</strong>
+                    <small>${item.status}</small>
+                  </div>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+
+          <div class="panel-section">
+            <div class="eyebrow">PLAYER POSITIONS</div>
+            <div class="role-list">
+              ${STATION_ROLES.map((role) => `
+                <div class="role-pill ${role === selectedStation ? 'active' : ''}">
+                  <span>${role}</span>
+                  <small>${role === 'MOB' ? 'Human' : 'AI'}</small>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </aside>
+
+        <section class="center-panel panel">
+          <div class="map-header">
+            <div>
+              <div class="eyebrow">LIVE BOARD</div>
+              <h2>Pacific Theater</h2>
+            </div>
+            <span class="tag">OPTIONAL FICTIONAL BOARD</span>
+          </div>
+
+          <svg class="map-svg" viewBox="0 0 760 420" aria-label="Interactive operational map">
+            ${SITE_DEFS.map((cell) => `
+              <g class="hex-node ${cell.id === site.id ? 'selected' : ''}" data-site-id="${cell.id}">
+                <polygon points="${hexPoints(cell.x, cell.y, 54)}" />
+                <text x="${cell.x}" y="${cell.y + 4}" text-anchor="middle">${cell.name.split(' ')[0]}</text>
+              </g>
+            `).join('')}
+          </svg>
+
+          <div class="map-info">
+            <h3>${site.name}</h3>
+            <div class="stats-row">
+              <div><span>Readiness</span><strong>${site.readiness}%</strong></div>
+              <div><span>Status</span><strong>${site.status}</strong></div>
+            </div>
+            <p>Original fictional exercise node. Selection drives the mission board, RFI process, and objective validation.</p>
+          </div>
+        </section>
+
+        <aside class="right-panel panel">
+          <div class="panel-section">
+            <div class="eyebrow">ACTIVE WORKSTATION</div>
+            <div class="tab-bar">
+              ${['BOARD', 'MOB', 'CAOC', 'CSpOC', 'MEDCOM', 'AAR'].map((tab) => `
+                <button class="tab ${tab === 'MOB' ? 'active' : ''}" data-tab="${tab}">${tab}</button>
+              `).join('')}
+            </div>
+            <div class="workstation-screen">
+              ${renderWorkstation(objective, site, state)}
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+  `;
+
+  bindInteractions();
+}
+
+function renderWorkstation(objective, site, state) {
+  if (!objective) return '<p>No objective selected.</p>';
+
+  const fuelResource = state.resources.available.find((item) => item.id === 'fuel-truck');
+  const supplies = state.resources.atSite['fos-lantern'] || {};
+
+  return `
+    <div class="mission-card">
+      <div class="eyebrow">OBJECTIVE</div>
+      <h3>${objective.title}</h3>
+      <p>${objective.description}</p>
+
+      <div class="requirement-list">
+        ${objective.requirements.map((item) => `
+          <div class="requirement ${item.satisfied ? 'satisfied' : ''}">
+            <span>${item.satisfied ? '✓' : '○'}</span>
+            <small>${item.label}</small>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="mini-grid">
+        <div>
+          <small>Available fuel trucks</small>
+          <strong>${fuelResource?.qty ?? 0}</strong>
+        </div>
+        <div>
+          <small>Assigned to site</small>
+          <strong>${supplies['fuel-truck'] ?? 0}</strong>
+        </div>
+      </div>
+
+      <div class="button-stack">
+        <button class="primary" data-action="rfi">REQUEST RFI</button>
+        <button data-action="assign-fuel">ASSIGN FUEL TRUCK</button>
+        <button data-action="approve-caoc">APPROVE WITH CAOC</button>
+        <button data-action="submit-task">SUBMIT TASK</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindInteractions() {
+  document.querySelectorAll('[data-site-id]').forEach((node) => {
+    node.addEventListener('click', () => {
+      const siteId = node.dataset.siteId;
+      state.selectedSiteId = siteId;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-objective-id]').forEach((node) => {
+    node.addEventListener('click', () => {
+      state.selectedObjectiveId = node.dataset.objectiveId;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.action;
+      try {
+        if (action === 'rfi') {
+          requestRFI(state, state.selectedSiteId, 'Access route and fuel support check');
+          state.ai.lastAction = 'RFI submitted';
+        }
+        if (action === 'assign-fuel') {
+          assignResource(state, 'fuel-truck', 1, 'fos-lantern');
+          runAiSupport(state);
+        }
+        if (action === 'approve-caoc') {
+          approveTask(state, 'CAOC');
+        }
+        if (action === 'submit-task') {
+          completeTurn(state);
+        }
+        if (action === 'next-turn') {
+          completeTurn(state);
+        }
+        if (action === 'save') {
+          localStorage.setItem('ops-state', JSON.stringify(state));
+          alert('Mission saved locally.');
+        }
+        if (action === 'reset') {
+          state = createMissionState({ role: 'MOB', difficulty: 'guided', mode: 'solo' });
+          localStorage.removeItem('ops-state');
+        }
+        render();
+      } catch (error) {
+        alert(error.message || 'Action failed');
+      }
+    });
+  });
+
+  document.querySelectorAll('.tab').forEach((button) => {
+    button.addEventListener('click', () => {
+      selectedStation = button.dataset.tab;
+      render();
+    });
+  });
+}
+
+function hexPoints(cx, cy, r) {
+  const points = [];
+  for (let i = 0; i < 6; i += 1) {
+    const angle = (Math.PI / 180) * (60 * i - 30);
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  return points.join(' ');
+}
+
+const saved = localStorage.getItem('ops-state');
+if (saved) {
+  try {
+    state = JSON.parse(saved);
+  } catch (error) {
+    console.warn('Could not load saved game', error);
+  }
+}
+
+render();
