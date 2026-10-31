@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operation Pacific Shield | Command Academy</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#030609;color:#e9f8fa;
+ font-family:system-ui,Arial,sans-serif
+}
+header{
+ padding:20px 5%;background:#0b171d;
+ border-bottom:1px solid #2d5660;
+ letter-spacing:3px;font-weight:800
+}
+header span,.eyebrow{color:#42e5c4}
+.hero{
+ max-width:1180px;margin:auto;padding:85px 5% 50px;
+ background:radial-gradient(ellipse at 90% 30%,#184c52,transparent 60%)
+}
+.eyebrow{
+ font-size:12px;letter-spacing:3px;font-weight:700
+}
+h1{
+ font-size:clamp(48px,8vw,105px);
+ margin:18px 0;line-height:.98;letter-spacing:-3px
+}
+h1 span{display:block;color:#40e6c5}
+p{color:#b6cbd0;line-height:1.75;max-width:740px}
+.cards{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:15px;margin-top:40px
+}
+.card{
+ border:1px solid #365a62;padding:24px;
+ border-radius:15px;background:#0b1a21
+}
+.card h2{margin-top:0;color:white}
+a.btn{
+ display:block;text-align:center;background:#123944;
+ color:#f0feff;text-decoration:none;padding:15px 18px;
+ border:1px solid #57b4b1;border-radius:9px;
+ font-weight:700;margin-top:20px
+}
+.card:first-child a{background:#3de3be;color:#03201a}
+a.btn:hover{background:#287c81}
+.more{max-width:1180px;margin:auto;padding:10px 5% 70px}
+.links{display:flex;flex-wrap:wrap;gap:12px}
+.links a{flex:1;min-width:180px}
+footer{
+ padding:20px 5%;border-top:1px solid #2b444b;
+ font-size:12px;color:#aac3c8
+}
+.coach{
+ position:fixed;right:20px;bottom:18px;
+ background:#0d242e;border:1px solid #54c8b4;
+ padding:10px 15px;border-radius:15px;
+ display:flex;gap:12px;align-items:center;
+ box-shadow:0 8px 25px #000a
+}
+.coach .face{font-size:34px}
+.coach small{color:#c6d9de}
+@media(max-width:750px){
+ .cards{grid-template-columns:1fr}
+ .hero{padding-top:50px}
+ .coach{position:static;margin:18px}
+}
+</style>
+</head>
+<body>
+<header>OPS <span>// PACIFIC SHIELD</span></header>
+
+<main class="hero">
+ <div class="eyebrow">
+  INDO-PACIFIC | OFFICER TRAINING SIMULATOR
+ </div>
+ <h1>OPERATION <span>PACIFIC SHIELD</span></h1>
+ <p>
+  Learn the OPS mission workflow, coordinate teams,
+  request airfield information, track fictional moving
+  aircraft, and practice mission command.
+  Your officer coach will explain decisions and mistakes.
+ </p>
+
+ <div class="cards">
+  <div class="card">
+   <h2>01 — Easy & Guided</h2>
+   <p>
+    Step-by-step mission, RFIs, helpful coach,
+    and explanations before and after decisions.
+   </p>
+   <a class="btn" href="./opt.html?mode=easy">
+    START GUIDED MISSION
+   </a>
+  </div>
+
+  <div class="card">
+   <h2>02 — Intermediate</h2>
+   <p>
+    Active aircraft and changing conditions.
+    Complete the mission without a forced tutorial.
+   </p>
+   <a class="btn" href="./opt.html?mode=intermediate">
+    LAUNCH INTERMEDIATE
+   </a>
+  </div>
+
+  <div class="card">
+   <h2>03 — Hard</h2>
+   <p>
+    Fewer practice resources, more demanding situations,
+    and shorter decision windows.
+   </p>
+   <a class="btn" href="./opt.html?mode=hard">
+    ACCEPT HARD MISSION
+   </a>
+  </div>
+ </div>
+</main>
+
+<section class="more">
+ <h2>MORE WAYS TO TRAIN</h2>
+ <div class="links">
+  <a class="btn" href="./opt.html?mode=learn">
+   📚 LEARN OPS RULES
+  </a>
+  <a class="btn" href="./opt.html?mode=team">
+   👥 HOST / JOIN TEAM GAME
+  </a>
+ </div>
+ <p>
+  Official outcomes depend on the authorized OPS guide,
+  instructor scenario and Game Master. All animated
+  movements and threats on this public site are fictional.
+ </p>
+</section>
+
+<div class="coach">
+ <span class="face">🫡</span>
+ <div>
+  <b>Officer Coach is ready.</b>
+  <div><small>I'll help you understand what to do next.</small></div>
+ </div>
+</div>
+
+<footer>
+ Educational training prototype • No real-world military tracking
+</footer>
+</body>
+</html>
