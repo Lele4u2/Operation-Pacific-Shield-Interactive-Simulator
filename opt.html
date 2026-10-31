@@ -1,0 +1,2170 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APEX | Pacific Operations</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+ --bg:#06121a;
+ --panel:#102632;
+ --edge:#486674;
+ --cream:#e6c28b;
+ --mint:#6ce8bb;
+ --sky:#65c7fa;
+ --red:#ff7c8d;
+ --ink:#effaff;
+ --sub:#aec5ce;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:var(--bg);
+ color:var(--ink);
+ font:13px Inter,Arial,sans-serif;
+}
+button,select{
+ font:inherit;
+ background:#1b3b49;
+ color:white;
+ border:1px solid #67818b;
+ border-radius:5px;
+ padding:9px;
+ cursor:pointer;
+}
+button:hover:not(:disabled){
+ background:#32586a;
+ border-color:var(--cream);
+}
+button:disabled{
+ opacity:.45;
+ cursor:default;
+}
+button.primary{
+ background:#e1bf87;
+ color:#132935;
+ font-weight:800;
+}
+.hidden{display:none!important}
+h1,h2,h3{
+ font-family:'Barlow Condensed',Impact,sans-serif;
+ letter-spacing:.7px;
+ margin:0 0 8px;
+}
+h1{font-size:55px}
+h2{font-size:26px}
+h3{font-size:20px}
+p{line-height:1.65;color:var(--sub)}
+.tag{
+ font:800 10px Inter;
+ letter-spacing:2px;
+ color:var(--cream);
+ text-transform:uppercase;
+ margin-bottom:8px;
+}
+header{
+ min-height:62px;
+ background:#081a24;
+ border-bottom:1px solid var(--edge);
+ padding:11px 16px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:12px;
+ flex-wrap:wrap;
+}
+.brand{
+ font:900 25px 'Barlow Condensed';
+ letter-spacing:2px;
+}
+.brand b{color:var(--cream)}
+.metrics{
+ display:flex;
+ gap:12px;
+ flex-wrap:wrap;
+ font-size:11px;
+}
+.metrics strong{color:var(--cream)}
+.tools{display:flex;gap:6px}
+.game{
+ display:grid;
+ grid-template-columns:235px minmax(400px,1fr) 305px;
+ gap:9px;
+ padding:9px;
+ max-width:1800px;
+ margin:auto;
+ height:calc(100vh - 62px);
+ min-height:600px;
+}
+.panel{
+ background:linear-gradient(140deg,#112c38,#091b26);
+ border:1px solid var(--edge);
+ border-radius:7px;
+ padding:13px;
+ overflow:auto;
+}
+.left,.right,.middle{
+ display:flex;
+ flex-direction:column;
+ min-height:0;
+ gap:9px;
+}
+.left .panel:last-child,
+.right .panel:first-child{
+ flex:1;
+ min-height:0;
+}
+.stat{
+ display:flex;
+ justify-content:space-between;
+ gap:10px;
+ padding:8px 0;
+ border-bottom:1px solid #375460;
+}
+.stat b{color:var(--cream)}
+.full{
+ width:100%;
+ text-align:left;
+ margin:5px 0;
+}
+#objectives{
+ max-height:53vh;
+ overflow:auto;
+}
+.obj{
+ width:100%;
+ display:block;
+ text-align:left;
+ margin:7px 0;
+ background:#17323f;
+ border-left:4px solid #738b98;
+}
+.obj.active{border-color:var(--cream)}
+.obj.success{border-left-color:var(--mint)}
+.obj.fail{border-left-color:var(--red)}
+.obj strong{
+ display:block;
+ font:800 17px 'Barlow Condensed';
+ margin-bottom:4px;
+}
+.obj small{
+ font-size:10px;
+ color:var(--sub);
+}
+.mapWrap{
+ position:relative;
+ flex:1;
+ min-height:380px;
+ border:1px solid #56848a;
+ border-radius:6px;
+ overflow:hidden;
+ background:#123344;
+}
+#map{height:100%;width:100%}
+.radar{
+ position:absolute;
+ inset:0;
+ z-index:500;
+ pointer-events:none;
+ opacity:.16;
+}
+.radar:after{
+ content:"";
+ position:absolute;
+ top:50%;
+ left:50%;
+ margin:-225px;
+ width:450px;
+ height:450px;
+ border-radius:50%;
+ background:conic-gradient(
+  transparent 0 298deg,
+  #3af8ad22 330deg,
+  #72ffd88a 358deg,
+  transparent 360deg
+ );
+ animation:sweep 8s linear infinite;
+}
+.radar:before{
+ content:"";
+ position:absolute;
+ top:50%;
+ left:50%;
+ margin:-225px;
+ width:450px;
+ height:450px;
+ border-radius:50%;
+ border:1px solid #51ffaa;
+ background:repeating-radial-gradient(
+  circle,
+  transparent 0 64px,
+  #51ffaa33 65px 66px
+ );
+}
+@keyframes sweep{
+ to{transform:rotate(360deg)}
+}
+.mapBar{
+ position:absolute;
+ z-index:600;
+ left:12px;
+ top:12px;
+ display:flex;
+ gap:5px;
+}
+.mapBar button{
+ font-size:10px;
+ padding:7px;
+ background:#0b2937ee;
+}
+.legend{
+ position:absolute;
+ z-index:500;
+ bottom:10px;
+ left:10px;
+ background:#0b2836dd;
+ padding:7px 10px;
+ font-size:10px;
+ pointer-events:none;
+}
+.legend b{color:var(--cream)}
+.log{
+ height:155px;
+ display:flex;
+ flex-direction:column;
+}
+.logEntries{
+ flex:1;
+ overflow:auto;
+ font-size:11px;
+}
+.logEntries article{
+ padding:6px 0;
+ border-bottom:1px solid #284a58;
+}
+.logEntries b{color:var(--cream)}
+.detail{
+ font-size:12px;
+ line-height:1.65;
+}
+.detail .info{
+ background:#153645;
+ padding:10px;
+ border-left:3px solid var(--cream);
+ margin:9px 0;
+}
+.detail button{margin:4px 0}
+.detail select{
+ width:100%;
+ margin:5px 0 9px;
+}
+.detail label{
+ color:#bad1da;
+ font-size:11px;
+ display:block;
+ margin-top:8px;
+}
+#coach{
+ display:flex;
+ gap:9px;
+ align-items:center;
+}
+.face{
+ width:56px;
+ text-align:center;
+ font-size:39px;
+}
+.speech{
+ margin-top:8px;
+ padding:10px;
+ border:1px solid #376372;
+ background:#113140;
+ line-height:1.65;
+ font-size:11px;
+}
+.overlay{
+ position:fixed;
+ inset:0;
+ z-index:2000;
+ background:#010910e9;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:15px;
+ backdrop-filter:blur(6px);
+}
+.modal{
+ width:min(780px,100%);
+ background:#102c3b;
+ border:1px solid #8caaaf;
+ border-radius:9px;
+ padding:25px;
+ max-height:90vh;
+ overflow:auto;
+}
+.roleGrid{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:8px;
+ margin:16px 0;
+}
+.roleGrid button{
+ text-align:left;
+ min-height:98px;
+}
+.roleGrid button.picked{
+ background:#68583d;
+ border-color:var(--cream);
+}
+.roleGrid strong{
+ font:800 25px 'Barlow Condensed';
+ display:block;
+}
+.roleGrid small{color:#b5cbd2}
+.buttons{
+ display:flex;
+ gap:8px;
+ flex-wrap:wrap;
+}
+.buttons button{flex:1}
+.status{
+ padding:7px 9px;
+ background:#193c45;
+ border-radius:4px;
+ color:#bcebd9;
+ font-size:11px;
+}
+.leaflet-tooltip.baseTag{
+ background:#092432eb;
+ color:#e2f3ff;
+ border:1px solid #75b9d8;
+ font-weight:700;
+ font-size:11px;
+ box-shadow:none;
+}
+.leaflet-tooltip.siteTag{
+ background:#282719ec;
+ color:#ffe9bd;
+ border:1px solid #dfbe88;
+ font-weight:800;
+ font-size:11px;
+ box-shadow:none;
+}
+.planeIcon{
+ background:transparent;
+ border:0;
+ font-size:25px;
+ text-shadow:0 0 8px #011;
+}
+.alertIcon{
+ background:transparent;
+ border:0;
+ font-size:27px;
+ text-shadow:0 0 12px #f55;
+}
+@media(max-width:1000px){
+ .game{
+  grid-template-columns:200px minmax(340px,1fr) 260px;
+ }
+}
+@media(max-width:800px){
+ .game{height:auto;display:block}
+ .left,.right{display:block}
+ .left .panel,.right .panel{margin-bottom:8px}
+ .mapWrap{height:480px}
+ .log{margin-top:8px}
+ #objectives{max-height:220px}
+ .roleGrid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+
+<body>
+<header>
+ <div class="brand">APEX <b>// PACIFIC SHIELD</b></div>
+ <div class="metrics">
+  <span>ROLE <strong id="roleHud">—</strong></span>
+  <span>TIME <strong id="clock">00:00</strong></span>
+  <span>READINESS <strong id="ready">100%</strong></span>
+  <span>MP <strong id="mp">0</strong></span>
+  <span>FLIGHTS <strong id="flightCount">0</strong></span>
+ </div>
+ <div class="tools">
+  <button id="pause" class="primary">▶ START</button>
+  <button id="speed">1×</button>
+  <button id="help">BRIEF</button>
+ </div>
+</header>
+
+<div class="game">
+ <aside class="left">
+  <section class="panel">
+   <div class="tag">Locked assignment</div>
+   <h3 id="station">AWAITING ORDERS</h3>
+   <p id="description">
+    Select or randomize your position.
+   </p>
+   <div class="stat">
+    <span>Completed objectives</span>
+    <b id="completeCount">0</b>
+   </div>
+   <div class="stat">
+    <span>Arrivals</span>
+    <b id="landed">0</b>
+   </div>
+   <div class="stat">
+    <span>Aircraft losses</span>
+    <b id="losses">0</b>
+   </div>
+   <button class="full" id="aar">
+    AFTER-ACTION REVIEW
+   </button>
+   <button class="full" id="restart">
+    NEW MISSION
+   </button>
+  </section>
+
+  <section class="panel">
+   <div class="tag">Mission objectives / task inbox</div>
+   <div id="objectives"></div>
+  </section>
+ </aside>
+
+ <main class="middle">
+  <div class="mapWrap">
+   <div id="map"></div>
+   <div class="radar"></div>
+   <div class="mapBar">
+    <button id="resetMap">PACIFIC VIEW</button>
+    <button id="toggleTerrain">SATELLITE</button>
+    <button id="mapHelp">MAP HELP</button>
+   </div>
+   <div class="legend">
+    <b>●</b> BLUE Friendly
+    <b>◆</b> GOLD FOS
+    <b>✈</b> RED Fictional threat
+    <b>✈</b> GOLD Cargo
+   </div>
+  </div>
+
+  <div class="panel log">
+   <div class="tag">Live operational radio feed</div>
+   <div id="feed" class="logEntries"></div>
+  </div>
+ </main>
+
+ <aside class="right">
+  <section class="panel">
+   <div class="tag">Selection / operational actions</div>
+   <h2 id="detailTitle">OPERATIONS DESK</h2>
+   <div id="detail" class="detail">
+    <p>Choose a role to begin.</p>
+   </div>
+  </section>
+
+  <section class="panel">
+   <div id="coach">
+    <div class="face" id="face">🫡</div>
+    <div>
+     <div class="tag" id="mood">OFFICER ADVISOR</div>
+     <strong>COACH</strong>
+    </div>
+   </div>
+   <div class="speech" id="speech">
+    Work your assigned job.
+    The computer crew will support the other stations.
+   </div>
+   <button id="hint" class="full">
+    WHAT SHOULD I DO?
+   </button>
+  </section>
+ </aside>
+</div>
+
+<div id="setup" class="overlay">
+ <div class="modal">
+  <div class="tag">Solo mission assignment</div>
+  <h1>YOUR ROLE. YOUR MISSION.</h1>
+  <p>
+   Choose MOB, CAOC, CSpOC, or MEDCOM—or receive a
+   random assignment. Your role is locked during
+   the mission. Other stations are computer controlled.
+  </p>
+  <div class="roleGrid" id="roleGrid"></div>
+  <label>Assigned MOB:</label>
+  <select id="mobSelect" style="width:100%;margin:8px 0">
+   <option>Kadena AB</option>
+   <option>Andersen AFB</option>
+   <option>Yokota AB</option>
+   <option>Osan AB</option>
+   <option>JB Pearl Harbor-Hickam</option>
+  </select>
+  <div class="buttons">
+   <button id="random">🎲 RANDOM ROLE</button>
+   <button id="deploy" class="primary">▶ DEPLOY</button>
+   <button id="resume" class="hidden">CONTINUE SAVE</button>
+  </div>
+  <p style="font-size:11px">
+   This is a fictional training prototype.
+   Real OPS rules and results require the
+   authorized guide and Game Master.
+  </p>
+ </div>
+</div>
+
+<div id="modal" class="overlay hidden">
+ <div class="modal">
+  <div class="tag" id="modalTag">SITUATION REPORT</div>
+  <h2 id="modalTitle"></h2>
+  <p id="modalText"></p>
+  <div id="modalActions" class="buttons"></div>
+  <button id="closeModal" style="margin-top:14px">
+   CLOSE
+  </button>
+ </div>
+</div>
+
+<script>
+'use strict';
+
+const $ = id => document.getElementById(id);
+
+const MODE =
+ new URLSearchParams(location.search).get('mode')
+ || 'easy';
+
+const D = {
+ easy:{
+  rate:.6,
+  interval:85,
+  deadline:Infinity
+ },
+ normal:{
+  rate:1,
+  interval:55,
+  deadline:250
+ },
+ hard:{
+  rate:1.2,
+  interval:38,
+  deadline:170
+ }
+}[MODE] || {
+ rate:.6,
+ interval:85,
+ deadline:Infinity
+};
+
+const ROLES = {
+ MOB:'Base logistics and support',
+ CAOC:'Air operations and aircraft coordination',
+ CSpOC:'Space and communications support',
+ MEDCOM:'Medical support and patient movement'
+};
+
+const BASES = [
+ ['Kadena AB',26.35,127.77],
+ ['Andersen AFB',13.58,144.93],
+ ['Yokota AB',35.75,139.35],
+ ['Osan AB',37.09,127.03],
+ ['JB Pearl Harbor-Hickam',21.34,202.05],
+ ['Kunsan AB',35.90,126.62],
+ ['Misawa AB',40.70,141.37],
+ ['Joint Base Elmendorf-Richardson',61.25,210.2]
+];
+
+const FOS = [
+ ['FOS Juniper',23.8,131],
+ ['FOS Lantern',17,145.5],
+ ['FOS Horizon',31.6,142],
+ ['FOS Anchor',25,174]
+];
+
+const CATS = [
+ 'Crash Fire Rescue',
+ 'Mobility Support',
+ 'Ramp Space',
+ 'Air Traffic Control',
+ 'Equipment',
+ 'Bed Down',
+ 'Fuel',
+ 'Airfield Security',
+ 'Local Community Support',
+ 'Medical'
+];
+
+const NEEDS = {
+ fuel:{
+  title:'Fuel / essential supplies',
+  person:'Fuels specialist',
+  owner:'MOB'
+ },
+ repair:{
+  title:'Repair equipment',
+  person:'Civil engineer',
+  owner:'MOB'
+ },
+ people:{
+  title:'Additional personnel',
+  person:'Personnel support lead',
+  owner:'MOB'
+ },
+ lift:{
+  title:'Airlift allocation',
+  person:'Mobility planner',
+  owner:'CAOC'
+ },
+ comms:{
+  title:'Communication support',
+  person:'Space operations liaison',
+  owner:'CSpOC'
+ },
+ medical:{
+  title:'Medical support',
+  person:'Medical planner',
+  owner:'MEDCOM'
+ }
+};
+
+const saveKey = 'apex-ops-copy-paste-v4-' + MODE;
+
+let S = null;
+let selectedRole = 'MOB';
+let map = null;
+let satellite = false;
+let mapMarkers = [];
+let previous = 0;
+let lastUI = 0;
+let lastSave = 0;
+let selected = {kind:'site',id:0};
+let lastDetailKey = '';
+
+const rand = a => a[Math.floor(Math.random()*a.length)];
+
+const esc = s =>
+ String(s)
+  .replaceAll('&','&amp;')
+  .replaceAll('<','&lt;')
+  .replaceAll('>','&gt;')
+  .replaceAll('"','&quot;');
+
+function fresh(role,mob){
+ return {
+  role,
+  mob,
+  playing:false,
+  speed:1,
+  time:0,
+  ready:100,
+  mp:0,
+  complete:0,
+  landed:0,
+  lost:0,
+  id:0,
+  flightId:0,
+  ended:false,
+  nextEvent:13,
+  aiNext:35,
+  rfi:FOS.map(()=>({
+   done:[],
+   pending:[]
+  })),
+  sites:FOS.map((x,i)=>({
+   id:i,
+   name:x[0],
+   lat:x[1],
+   lon:x[2],
+   runway:true,
+   threatUntil:0,
+   stock:{
+    fuel:1,
+    repair:1,
+    people:1,
+    lift:1,
+    comms:1,
+    medical:1
+   }
+  })),
+  tasks:[],
+  flights:[],
+  history:[],
+  mistakes:[]
+ };
+}
+
+function save(){
+ if(S){
+  try{
+   localStorage.setItem(
+    saveKey,
+    JSON.stringify(S)
+   );
+  }catch(e){}
+ }
+}
+
+function coach(m,text){
+ $('face').textContent = {
+  good:'😄',
+  bad:'😠',
+  think:'🤔',
+  alert:'😮',
+  neutral:'🫡'
+ }[m] || '🫡';
+
+ $('mood').textContent = {
+  good:'GOOD WORK',
+  bad:'RECONSIDER ORDER',
+  think:'THINK IT THROUGH',
+  alert:'NEW ALERT',
+  neutral:'OFFICER ADVISOR'
+ }[m] || 'COACH';
+
+ $('speech').textContent = text;
+}
+
+function log(title,text,mood){
+ if(!S)return;
+
+ S.history.unshift({
+  at:Math.floor(S.time),
+  title,
+  text
+ });
+
+ S.history=S.history.slice(0,75);
+
+ if(mood)coach(mood,text);
+
+ renderFeed();
+ save();
+}
+
+function renderFeed(){
+ const area=$('feed');
+ area.replaceChildren();
+
+ (S?.history||[]).slice(0,35).forEach(e=>{
+  const a=document.createElement('article');
+  const b=document.createElement('b');
+
+  b.textContent='T+'+e.at+' | '+e.title;
+
+  const p=document.createElement('div');
+  p.textContent=e.text;
+
+  a.append(b,p);
+  area.append(a);
+ });
+}
+
+function error(text,fix){
+ S.ready=Math.max(0,S.ready-5);
+ S.mistakes.push({text,fix});
+
+ log(
+  'ORDER REJECTED',
+  text+' — '+fix,
+  'bad'
+ );
+
+ render();
+}
+
+function modal(title,text,opts){
+ $('modalTitle').textContent=title;
+ $('modalText').textContent=text;
+ $('modalActions').replaceChildren();
+
+ opts.forEach(o=>{
+  const b=document.createElement('button');
+  b.textContent=o[0];
+  b.onclick=o[1];
+  $('modalActions').append(b);
+ });
+
+ $('modal').classList.remove('hidden');
+}
+
+function hideModal(){
+ $('modal').classList.add('hidden');
+}
+
+function stationTask(kind,siteId){
+ if(!S||S.ended)return;
+
+ const n=NEEDS[kind];
+
+ if(S.tasks.some(t=>
+  t.site===siteId &&
+  t.kind===kind &&
+  !['closed','failed'].includes(t.stage)
+ ))return;
+
+ const t={
+  id:++S.id,
+  site:siteId,
+  kind,
+  owner:S.role,
+  stage:'available',
+  created:S.time,
+  due:S.time+D.deadline,
+  assigned:'',
+  source:null,
+  dest:null,
+  flight:null
+ };
+
+ S.tasks.push(t);
+
+ // A repair shortage reduces equipment capability.
+ // The receiving runway remains open for support.
+
+ S.sites[siteId].stock[kind]=0;
+
+ log(
+  'NEW OPERATIONAL RFI',
+  'Request #'+t.id+': '+n.title+
+  ' required at '+FOS[siteId][0]+
+  '. Assigned to '+S.role+'.',
+  'alert'
+ );
+
+ selected={kind:'task',id:t.id};
+ render();
+}
+
+function spawn(){
+ const options={
+  MOB:['fuel','repair','people'],
+  CAOC:['lift'],
+  CSpOC:['comms'],
+  MEDCOM:['medical']
+ }[S.role];
+
+ stationTask(
+  rand(options),
+  Math.floor(Math.random()*FOS.length)
+ );
+
+ if(Math.random()<.27){
+  const s=rand(S.sites);
+  s.threatUntil=S.time+37;
+
+  log(
+   'OPFOR EXERCISE TRACK',
+   'Fictional red aircraft reported near '+
+   s.name+
+   '. The reported status may limit arrivals.',
+   'alert'
+  );
+ }
+}
+
+function initialFlights(){
+ flight(0,1,null);
+ flight(4,2,null);
+}
+
+function flight(origin,dest,taskId){
+ const f={
+  id:'LIFT-'+(++S.flightId),
+  from:origin,
+  dest,
+  taskId,
+  progress:0,
+  status:'EN ROUTE',
+  fuel:95,
+  duration:112,
+  aiAt:0,
+  alternative:false
+ };
+
+ S.flights.push(f);
+
+ log(
+  'AIRCRAFT DEPARTED',
+  f.id+' departed '+BASES[origin][0]+
+  ' for '+FOS[dest][0]+'.'
+ );
+
+ return f;
+}
+
+function task(id){
+ return S.tasks.find(t=>t.id===id);
+}
+
+function plane(id){
+ return S.flights.find(f=>f.id===id);
+}
+
+function selectThing(kind,id){
+ selected={kind,id};
+ render();
+
+ if(kind==='site'){
+  coach(
+   'neutral',
+   'Select the site RFIs or inspect its reported resources.'
+  );
+ }
+}
+
+function sourceIndex(){
+ const i=BASES.findIndex(b=>b[0]===S.mob);
+ return Math.max(0,i);
+}
+
+function coordinate(t){
+ if(t.owner!==S.role){
+  return error(
+   'Unauthorized station task',
+   'Work only the requirements assigned to your role.'
+  );
+ }
+
+ const person=$('person')?.value;
+ const kind=$('resource')?.value;
+ const dest=$('destination')?.value;
+ const src=$('origin')?.value;
+
+ if(person!==NEEDS[t.kind].person){
+  return error(
+   'Wrong specialist assigned',
+   'Choose '+NEEDS[t.kind].person+'.'
+  );
+ }
+
+ if(kind!==t.kind){
+  return error(
+   'Incorrect support package',
+   'Choose '+NEEDS[t.kind].title+'.'
+  );
+ }
+
+ if(dest===''||Number(dest)!==t.site){
+  return error(
+   'Wrong receiving site',
+   'Send support to '+FOS[t.site][0]+'.'
+  );
+ }
+
+ if(src===''){
+  return coach(
+   'think',
+   'Choose a source base for this support request.'
+  );
+ }
+
+ t.assigned=person;
+ t.origin=Number(src);
+ t.stage='coordinating';
+ t.launchAt=S.time+10;
+
+ log(
+  'REQUEST SENT TO COMPUTER TEAM',
+  NEEDS[t.kind].title+' from '+
+  BASES[t.origin][0]+' to '+
+  FOS[t.site][0]+
+  '. AI stations are reviewing approval.',
+  'good'
+ );
+
+ render();
+}
+
+function verify(t){
+ if(t.owner!==S.role)return;
+
+ if(t.stage!=='awaiting_verification'){
+  return coach(
+   'think',
+   'Support has not reached the reported end state.'
+  );
+ }
+
+ const s=S.sites[t.site];
+
+ if(s.stock[t.kind]<1){
+  return error(
+   'Support was not verified',
+   'Check that the requested capability reached the base.'
+  );
+ }
+
+ t.stage='ready_for_report';
+
+ log(
+  'CAPABILITY VERIFIED',
+  s.name+' has received '+
+  NEEDS[t.kind].title+
+  '. Submit a final report.',
+  'good'
+ );
+
+ render();
+}
+
+function report(t){
+ if(t.stage!=='ready_for_report')return;
+
+ t.stage='closed';
+ S.complete++;
+
+ log(
+  'FINAL REPORT ACCEPTED',
+  'Objective #'+t.id+
+  ' verified and completed by '+S.role+'.',
+  'good'
+ );
+
+ render();
+ checkEnd();
+}
+
+function canLand(f){
+ const s=S.sites[f.dest];
+
+ return s.runway && S.time>s.threatUntil;
+}
+
+function finishLanding(f){
+ if(f.status!=='HOLDING')return;
+
+ if(!canLand(f)){
+  return error(
+   'Unsafe receiving conditions',
+   'Use the alternate or wait for receiving-site readiness.'
+  );
+ }
+
+ f.status='LANDED';
+ S.landed++;
+
+ const t=task(f.taskId);
+
+ if(t){
+  const s=S.sites[t.site];
+  s.stock[t.kind]+=1;
+
+  if(t.kind==='repair'){
+   s.runway=true;
+  }
+
+  if(t.stage!=='failed'){
+   t.stage='awaiting_verification';
+  }
+ }
+
+ log(
+  'AIRCRAFT LANDED',
+  f.id+' arrived at '+
+  FOS[f.dest][0]+
+  '. Verify cargo with the receiving station.',
+  'good'
+ );
+
+ render();
+ checkEnd();
+}
+
+function divert(f){
+ if(f.status!=='HOLDING')return;
+
+ f.status='DIVERTING';
+ f.progress=0;
+ f.duration=38;
+ f.aiAt=0;
+
+ log(
+  'DIVERSION ORDERED',
+  f.id+' diverted to the fictional alternate. '+
+  'Its original mission remains unfinished.',
+  'think'
+ );
+
+ render();
+}
+
+function landDecision(f){
+ if(f.status!=='HOLDING')return;
+
+ if(S.role!=='CAOC'){
+  f.aiAt=S.time+6;
+
+  log(
+   'LANDING REQUEST FORWARDED',
+   S.role+' notified computer CAOC about '+
+   f.id+'.',
+   'think'
+  );
+
+  return;
+ }
+
+ modal(
+  'AIRCRAFT ARRIVAL — '+f.id,
+  'Destination: '+FOS[f.dest][0]+
+  '. Simulated fuel: '+
+  Math.round(f.fuel)+'%. Receiving field: '+
+  (canLand(f)?'REPORTED AVAILABLE':'RESTRICTED')+'.',
+  [
+   [
+    'AUTHORIZE DESTINATION',
+    ()=>{
+     if(canLand(f)){
+      finishLanding(f);
+      hideModal();
+     }else{
+      error(
+       'Receiving site restricted',
+       'Verify the situation or divert.'
+      );
+     }
+    }
+   ],
+   [
+    'DIVERT TO ALTERNATE',
+    ()=>{
+     divert(f);
+     hideModal();
+    }
+   ]
+  ]
+ );
+}
+
+function checkEnd(){
+ if(S.ended)return;
+
+ if(
+  S.complete>=3 &&
+  S.landed>=2 &&
+  S.ready>=50 &&
+  S.lost===0
+ ){
+  S.ended=true;
+  S.playing=false;
+
+  log(
+   'PRACTICE OBJECTIVES COMPLETE',
+   'Three assigned support objectives and '+
+   'two arrivals completed with mission readiness maintained.',
+   'good'
+  );
+
+  showAAR();
+ }
+}
+
+function showAAR(){
+ selected={kind:'aar',id:0};
+ render();
+}
+
+function briefing(){
+ modal(
+  'MISSION BRIEFING',
+  'SITUATION: Fictional Pacific forward sites have '+
+  'support requirements, assigned aircraft are moving, '+
+  'and surprise requests interrupt the mission.\n\n'+
+  'MISSION: Coordinate within your locked '+
+  S.role+' station.\n\n'+
+  'YOUR JOB: '+ROLES[S.role]+'.\n\n'+
+  'RESOURCES: Computer teammates at all other stations '+
+  'and limited fictional support assets.\n\n'+
+  'END STATE: Close three authorized support objectives '+
+  'after delivery, verification and reporting; '+
+  'safely receive two combined-force flights; '+
+  'maintain 50% readiness; avoid preventable losses. '+
+  'This is a custom practice goal, not official OPS scoring.',
+  [
+   [
+    'BEGIN OPERATIONS',
+    ()=>{
+     hideModal();
+     S.playing=true;
+     render();
+    }
+   ],
+   [
+    'REVIEW MY STATION',
+    ()=>{
+     hideModal();
+     render();
+    }
+   ]
+  ]
+ );
+
+ $('modalText').style.whiteSpace='pre-line';
+}
+
+function requestRfi(i){
+ if(S.role!=='MOB'){
+  return coach(
+   'think',
+   'MOB selects the initial airfield RFI categories. '+
+   'The AI MOB handles other stations.'
+  );
+ }
+
+ if(selected.kind!=='site'){
+  return coach(
+   'think',
+   'Select a gold FOS marker on the map first.'
+  );
+ }
+
+ const r=S.rfi[selected.id];
+ const s=S.sites[selected.id];
+
+ if(
+  r.done.includes(i) ||
+  r.pending.some(p=>p.i===i)
+ )return;
+
+ if(
+  r.done.length<5 &&
+  r.done.length+r.pending.length>=5
+ ){
+  return coach(
+   'think',
+   'Your five initial RFI categories have been submitted. '+
+   'Wait for simulated GM responses.'
+  );
+ }
+
+ r.pending.push({
+  i,
+  when:S.time+8
+ });
+
+ log(
+  'AIRFIELD RFI SENT',
+  CATS[i]+' requested at '+
+  s.name+' from simulated GM.',
+  'think'
+ );
+
+ render();
+}
+
+function sim(dt){
+ if(!S?.playing||S.ended)return;
+
+ const d=dt*D.rate*S.speed;
+ S.time+=d;
+
+ if(S.time>S.nextEvent){
+  S.nextEvent+=D.interval*(.65+Math.random()*.9);
+  spawn();
+ }
+
+ if(S.time>S.aiNext){
+  S.aiNext+=40;
+
+  log(
+   'COMPUTER CREW STATUS',
+   'Other stations are checking aviation, logistics, '+
+   'medical and communications requirements.'
+  );
+ }
+
+ for(let k=0;k<S.rfi.length;k++){
+  const r=S.rfi[k];
+
+  for(const p of [...r.pending]){
+   if(S.time<p.when)continue;
+
+   r.pending=r.pending.filter(x=>x!==p);
+   r.done.push(p.i);
+
+   log(
+    'GM ASSESSMENT RESPONSE',
+    FOS[k][0]+' — '+CATS[p.i]+
+    ': fictional example response recorded.',
+    'good'
+   );
+
+   if(r.done.length===10){
+    S.mp+=5;
+
+    log(
+     'FULL AIRFIELD RFI SET +5 MP',
+     FOS[k][0]+' has all ten categories answered.',
+     'good'
+    );
+   }
+  }
+ }
+
+ for(const t of S.tasks){
+  if(
+   t.stage==='coordinating' &&
+   S.time>=t.launchAt
+  ){
+   t.stage='transit';
+
+   t.flight=flight(
+    t.origin,
+    t.site,
+    t.id
+   ).id;
+  }
+
+  if(
+   !['closed','failed'].includes(t.stage) &&
+   S.time>t.due
+  ){
+   t.stage='failed';
+   S.ready=Math.max(0,S.ready-10);
+
+   S.mistakes.push({
+    text:'Missed support window for '+FOS[t.site][0],
+    fix:'Coordinate earlier and monitor the delivery.'
+   });
+
+   log(
+    'OBJECTIVE AT RISK / FAILED',
+    'Support request #'+t.id+
+    ' missed its exercise deadline.',
+    'bad'
+   );
+  }
+ }
+
+ for(const f of S.flights){
+  if(f.status==='EN ROUTE'){
+   f.progress=Math.min(
+    1,
+    f.progress+d/f.duration
+   );
+
+   f.fuel=Math.max(
+    0,
+    f.fuel-d*.26
+   );
+
+   if(f.progress>=1){
+    f.status='HOLDING';
+    f.aiAt=S.role==='CAOC'?0:S.time+10;
+
+    log(
+     'LANDING REQUEST',
+     f.id+' holding near '+
+     FOS[f.dest][0]+
+     '. Inspect the aircraft.',
+     'alert'
+    );
+   }
+
+  }else if(f.status==='HOLDING'){
+   f.fuel=Math.max(
+    0,
+    f.fuel-d*1.2
+   );
+
+   if(f.aiAt&&S.time>=f.aiAt){
+    if(canLand(f)){
+     finishLanding(f);
+    }else{
+     divert(f);
+    }
+   }
+
+   if(f.status==='HOLDING'&&f.fuel<=0){
+    f.status='LOST';
+    S.lost++;
+    S.ready=Math.max(0,S.ready-35);
+
+    S.mistakes.push({
+     text:'Fictional aircraft '+f.id+
+     ' exhausted fuel while holding',
+     fix:'Monitor flight status and coordinate an '+
+     'early landing or diversion.'
+    });
+
+    log(
+     'SIMULATED AIRCRAFT LOSS',
+     f.id+' was lost in the fictional exercise.',
+     'bad'
+    );
+   }
+
+  }else if(f.status==='DIVERTING'){
+   f.progress=Math.min(
+    1,
+    f.progress+d/f.duration
+   );
+
+   if(f.progress>=1){
+    f.status='DIVERTED';
+
+    log(
+     'DIVERSION COMPLETE',
+     f.id+
+     ' reached a fictional alternate. '+
+     'Original cargo remains undelivered.',
+     'think'
+    );
+   }
+  }
+ }
+
+ if(
+  S.lost>=2 ||
+  S.ready<35 ||
+  S.time>=1200
+ ){
+  S.ended=true;
+  S.playing=false;
+
+  log(
+   'EXERCISE ENDED',
+   'Review your after-action report.'
+  );
+
+  showAAR();
+ }
+
+ checkEnd();
+}
+
+function textOption(options,id,placeholder){
+ return '<select id="'+id+'">'+
+  '<option value="">'+placeholder+'</option>'+
+  options.map(
+   ([v,t])=>
+    '<option value="'+esc(v)+'">'+
+    esc(t)+'</option>'
+  ).join('')+
+ '</select>';
+}
+
+function details(){
+ if(!S)return;
+
+ const x=$('detail');
+ x.replaceChildren();
+
+ let html='';
+ let title='OPERATIONS DESK';
+
+ if(selected.kind==='task'){
+  const t=task(selected.id);
+  if(!t)return;
+
+  title='OBJECTIVE #'+t.id;
+
+  html=
+   '<div class="tag">'+
+   esc(t.stage.replaceAll('_',' ').toUpperCase())+
+   '</div>'+
+   '<h3>'+esc(NEEDS[t.kind].title)+'</h3>'+
+   '<p>Station: '+esc(t.owner)+
+   '<br>Location: '+esc(FOS[t.site][0])+
+   '<br>End state: '+esc(NEEDS[t.kind].title)+
+   ' received, verified and reported.</p>'+
+   '<div class="info">'+
+   (
+    t.stage==='available'
+    ? 'Inspect report → assign specialist → select support → '+
+      'identify receiving FOS → coordinate → wait for delivery → '+
+      'verify → report.'
+    : 'Current stage: '+esc(t.stage)
+   )+
+   '</div>';
+
+  if(t.stage==='available'){
+   html+=
+    '<button class="full primary" '+
+    'data-action="inspect" data-id="'+t.id+'">'+
+    'INSPECT SITE REPORT</button>';
+  }
+
+  if(t.stage==='in_progress'){
+   html+=
+    '<label>Specialist</label>'+
+    textOption(
+     [...new Set(
+      Object.values(NEEDS).map(n=>n.person)
+     )].map(p=>[p,p]),
+     'person',
+     'Choose specialist'
+    )+
+    '<label>Support package</label>'+
+    textOption(
+     Object.entries(NEEDS).map(([k,v])=>[k,v.title]),
+     'resource',
+     'Choose support'
+    )+
+    '<label>Source base</label>'+
+    textOption(
+     BASES.slice(0,5).map((b,i)=>[i,b[0]]),
+     'origin',
+     'Choose source'
+    )+
+    '<label>Receiving FOS</label>'+
+    textOption(
+     FOS.map((b,i)=>[i,b[0]]),
+     'destination',
+     'Choose destination'
+    )+
+    '<button class="full primary" '+
+    'data-action="coordinate" data-id="'+t.id+'">'+
+    'SEND REQUEST TO COMPUTER STAFF</button>';
+  }
+
+  if(['coordinating','transit'].includes(t.stage)){
+   html+=
+    '<p class="status">Support is being coordinated '+
+    'or transported. Watch the map.</p>';
+  }
+
+  if(t.stage==='awaiting_verification'){
+   html+=
+    '<button class="full primary" '+
+    'data-action="verify" data-id="'+t.id+'">'+
+    'VERIFY CAPABILITY</button>';
+  }
+
+  if(t.stage==='ready_for_report'){
+   html+=
+    '<button class="full primary" '+
+    'data-action="report" data-id="'+t.id+'">'+
+    'SUBMIT FINAL REPORT</button>';
+  }
+
+  if(t.stage==='closed'){
+   html+=
+    '<p class="status">✓ OBJECTIVE COMPLETED AND REPORTED</p>';
+  }
+
+ }else if(selected.kind==='flight'){
+  const f=plane(selected.id);
+  if(!f)return;
+
+  title='FLIGHT '+f.id;
+
+  html=
+   '<h3>'+esc(f.status)+'</h3>'+
+   '<p>Destination '+esc(FOS[f.dest][0])+
+   '<br>Travel '+Math.round(f.progress*100)+'%'+
+   '<br>Fictional fuel '+Math.round(f.fuel)+'%'+
+   '<br>Responsible station: CAOC</p>'+
+   '<div class="info">Aircraft decisions affect '+
+   'delivered support and fictional safety.</div>';
+
+  if(f.status==='HOLDING'){
+   html+=
+    '<button class="full primary" data-action="land" '+
+    'data-id="'+f.id+'">'+
+    (
+     S.role==='CAOC'
+     ? 'REVIEW LANDING / DIVERT'
+     : 'REQUEST AI CAOC DECISION'
+    )+
+    '</button>';
+  }
+
+ }else if(selected.kind==='site'){
+  const s=S.sites[selected.id];
+  const r=S.rfi[selected.id];
+
+  title=s.name;
+
+  html=
+   '<p>Fictional Forward Operating Site. Runway '+
+   (s.runway?'AVAILABLE':'CLOSED')+
+   '. Opposing activity '+
+   (S.time<s.threatUntil?'REPORTED':'NONE REPORTED')+
+   '.</p>'+
+   '<div class="tag">Resources</div>'+
+   Object.entries(s.stock).map(
+    ([k,v])=>
+     '<div class="stat"><span>'+esc(k)+
+     '</span><b>'+v+'</b></div>'
+   ).join('')+
+   '<div class="tag" style="margin-top:12px">'+
+   'Airfield RFIs / '+r.done.length+'/10</div>'+
+   CATS.map(
+    (c,i)=>
+     '<button class="full" data-action="rfi" '+
+     'data-id="'+i+'" '+
+     (
+      S.role!=='MOB'||
+      r.done.includes(i)||
+      r.pending.some(p=>p.i===i)
+      ? 'disabled'
+      : ''
+     )+
+     '>'+
+     (
+      r.done.includes(i)
+      ? '✓ '
+      : r.pending.some(p=>p.i===i)
+       ? '… '
+       : '? '
+     )+
+     esc(c)+'</button>'
+   ).join('');
+
+ }else if(selected.kind==='aar'){
+  title='AFTER-ACTION REPORT';
+
+  html=
+   '<p>Assigned role: '+S.role+
+   '<br>Support objectives closed: '+S.complete+'/3'+
+   '<br>Flights safely landed: '+S.landed+'/2'+
+   '<br>Aircraft losses: '+S.lost+
+   '<br>Readiness: '+Math.round(S.ready)+'%'+
+   '<br>Guide-style RFI MP: '+S.mp+'</p>'+
+   '<div class="tag">Incomplete objectives</div>'+
+   S.tasks
+    .filter(t=>t.stage!=='closed')
+    .map(
+     t=>
+      '<p>• #'+t.id+' '+
+      esc(NEEDS[t.kind].title)+
+      ': '+esc(t.stage)+'</p>'
+    ).join('')+
+   '<div class="tag">Lessons</div>'+
+   S.mistakes.map(
+    e=>
+     '<p>'+esc(e.text)+
+     '<br>Next time: '+esc(e.fix)+'</p>'
+   ).join('')+
+   '<p>Official OPS scoring and GM adjudication '+
+   'remain separate from this practice game.</p>';
+ }
+
+ $('detailTitle').textContent=title;
+ x.innerHTML=html;
+}
+
+function render(){
+ if(!S)return;
+
+ $('roleHud').textContent=S.role;
+
+ $('clock').textContent=
+  String(Math.floor(S.time/60)).padStart(2,'0')+
+  ':'+
+  String(Math.floor(S.time%60)).padStart(2,'0');
+
+ $('ready').textContent=Math.round(S.ready)+'%';
+ $('mp').textContent=S.mp;
+
+ $('flightCount').textContent=
+  S.flights.filter(
+   f=>['EN ROUTE','HOLDING','DIVERTING'].includes(f.status)
+  ).length;
+
+ $('station').textContent=S.role+' OPERATIONS';
+
+ $('description').textContent=
+  ROLES[S.role]+' — assigned location '+
+  S.mob+
+  '. Computer-controlled teammates handle other stations.';
+
+ $('completeCount').textContent=S.complete;
+ $('landed').textContent=S.landed;
+ $('losses').textContent=S.lost;
+
+ $('pause').textContent=
+  S.playing?'Ⅱ PAUSE':'▶ START';
+
+ $('pause').disabled=S.ended;
+
+ const o=$('objectives');
+ o.replaceChildren();
+
+ for(const t of [...S.tasks].reverse()){
+  const b=document.createElement('button');
+
+  b.className=
+   'obj '+
+   (
+    selected.kind==='task'&&selected.id===t.id
+    ? 'active '
+    : ''
+   )+
+   (
+    t.stage==='closed'
+    ? 'success'
+    : t.stage==='failed'
+     ? 'fail'
+     : ''
+   );
+
+  const name=document.createElement('strong');
+  name.textContent='#'+t.id+' '+NEEDS[t.kind].title;
+
+  const note=document.createElement('small');
+  note.textContent=
+   FOS[t.site][0]+' • '+t.stage.toUpperCase();
+
+  b.append(name,note);
+  b.onclick=()=>selectThing('task',t.id);
+
+  o.append(b);
+ }
+
+ if(!S.tasks.length){
+  o.textContent=
+   'No active requests yet. Start the clock to '+
+   'receive incoming operational RFIs.';
+ }
+
+ // Do not rebuild form fields on every animation frame.
+ // This preserves the player's selected staff and cargo.
+
+ const context=
+  selected.kind+':'+selected.id+':'+
+  (
+   selected.kind==='task'
+   ? task(selected.id)?.stage||''
+   : selected.kind==='flight'
+    ? plane(selected.id)?.status||''
+    : selected.kind==='site'
+     ? S.rfi[selected.id]?.done.length+'-'+
+       S.rfi[selected.id]?.pending.length
+     : 'aar'
+  );
+
+ if(context!==lastDetailKey){
+  lastDetailKey=context;
+  details();
+ }
+}
+
+function initMap(){
+ if(!window.L){
+  $('map').innerHTML=
+   '<p style="padding:30px">'+
+   'Interactive map needs internet access.'+
+   '</p>';
+  return;
+ }
+
+ map=L.map('map',{
+  minZoom:2,
+  maxZoom:5,
+  worldCopyJump:false
+ }).setView([25,166],3);
+
+ map.setMaxBounds([
+  [-15,98],
+  [72,235]
+ ]);
+
+ setTiles();
+}
+
+function setTiles(){
+ if(!map)return;
+
+ if(window.tiles){
+  map.removeLayer(window.tiles);
+ }
+
+ window.tiles=L.tileLayer(
+  satellite
+  ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+  : 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+  {
+   maxZoom:5,
+   attribution:satellite
+    ? 'Imagery © Esri'
+    : '© OpenStreetMap © CARTO'
+  }
+ ).addTo(map);
+}
+
+function markerIcon(color){
+ return L.divIcon({
+  className:'planeIcon',
+  html:'<span style="color:'+color+'">✈</span>',
+  iconSize:[30,30],
+  iconAnchor:[15,15]
+ });
+}
+
+function drawMap(){
+ if(!map||!S)return;
+
+ for(const layer of mapMarkers){
+  map.removeLayer(layer);
+ }
+
+ mapMarkers=[];
+
+ for(const b of BASES){
+  const l=L.circleMarker(
+   [b[1],b[2]],
+   {
+    radius:5,
+    color:'#7fd7ff',
+    fillColor:'#2a7190',
+    fillOpacity:1
+   }
+  ).addTo(map);
+
+  l.bindTooltip(
+   b[0],
+   {
+    permanent:true,
+    direction:'right',
+    className:'baseTag'
+   }
+  );
+
+  mapMarkers.push(l);
+ }
+
+ S.sites.forEach(s=>{
+  const m=L.circleMarker(
+   [s.lat,s.lon],
+   {
+    radius:9,
+    color:s.runway?'#e8c184':'#ff758e',
+    fillColor:'#755b29',
+    fillOpacity:1
+   }
+  ).addTo(map);
+
+  m.bindTooltip(
+   s.name,
+   {
+    permanent:true,
+    direction:'right',
+    className:'siteTag'
+   }
+  );
+
+  m.on('click',()=>selectThing('site',s.id));
+
+  mapMarkers.push(m);
+
+  if(S.time<s.threatUntil){
+   const t=L.marker(
+    [s.lat+2,s.lon+3],
+    {
+     icon:markerIcon('#ff657a')
+    }
+   ).addTo(map);
+
+   t.bindTooltip('FICTIONAL OPPOSING AIRCRAFT');
+   mapMarkers.push(t);
+  }
+ });
+
+ S.flights.forEach(f=>{
+  if(['LANDED','LOST','DIVERTED'].includes(f.status)){
+   return;
+  }
+
+  const a=BASES[f.from];
+  const b=S.sites[f.dest];
+
+  const lat=
+   a[1]+(b.lat-a[1])*f.progress;
+
+  const lon=
+   a[2]+(b.lon-a[2])*f.progress;
+
+  const color=f.taskId?'#e6c184':'#76d3ff';
+
+  const route=L.polyline(
+   [
+    [a[1],a[2]],
+    [b.lat,b.lon]
+   ],
+   {
+    color,
+    weight:2,
+    dashArray:'7,7',
+    opacity:.55
+   }
+  ).addTo(map);
+
+  const m=L.marker(
+   [lat,lon],
+   {
+    icon:markerIcon(color)
+   }
+  ).addTo(map);
+
+  m.bindTooltip(f.id+' — '+f.status);
+  m.on('click',()=>selectThing('flight',f.id));
+
+  mapMarkers.push(route,m);
+ });
+}
+
+function setupRoles(){
+ const root=$('roleGrid');
+ root.replaceChildren();
+
+ for(const [r,d] of Object.entries(ROLES)){
+  const b=document.createElement('button');
+
+  b.className=
+   selectedRole===r?'picked':'';
+
+  const strong=document.createElement('strong');
+  strong.textContent=r;
+
+  const small=document.createElement('small');
+  small.textContent=d;
+
+  b.append(strong,small);
+
+  b.onclick=()=>{
+   selectedRole=r;
+   setupRoles();
+   $('mobSelect').disabled=r!=='MOB';
+  };
+
+  root.append(b);
+ }
+}
+
+function deploy(saved=null){
+ S=saved||fresh(
+  selectedRole,
+  $('mobSelect').value
+ );
+
+ selectedRole=S.role;
+ $('setup').classList.add('hidden');
+
+ if(!saved){
+  initialFlights();
+
+  log(
+   'ASSIGNMENT LOCKED',
+   'You are '+S.role+
+   '. Your computer teammates are standing by.',
+   'good'
+  );
+ }
+
+ if(!map){
+  initMap();
+ }
+
+ selected={kind:'site',id:0};
+ lastDetailKey='';
+
+ render();
+ briefing();
+ save();
+}
+
+function act(e){
+ const b=e.target.closest('button[data-action]');
+ if(!b||!S)return;
+
+ const action=b.dataset.action;
+ const id=b.dataset.id;
+
+ if(action==='inspect'){
+  const t=task(Number(id));
+
+  if(t.stage==='available'){
+   t.stage='in_progress';
+
+   log(
+    'REPORT INVESTIGATED',
+    FOS[t.site][0]+': '+
+    NEEDS[t.kind].title+
+    ' shortage confirmed.',
+    'good'
+   );
+
+   render();
+  }
+
+ }else if(action==='coordinate'){
+  coordinate(task(Number(id)));
+
+ }else if(action==='verify'){
+  verify(task(Number(id)));
+
+ }else if(action==='report'){
+  report(task(Number(id)));
+
+ }else if(action==='land'){
+  landDecision(plane(id));
+
+ }else if(action==='rfi'){
+  requestRfi(Number(id));
+ }
+}
+
+function bind(){
+ $('detail').addEventListener('click',act);
+
+ $('random').onclick=()=>{
+  selectedRole=rand(Object.keys(ROLES));
+  setupRoles();
+  $('mobSelect').disabled=selectedRole!=='MOB';
+ };
+
+ $('deploy').onclick=()=>deploy();
+
+ $('resume').onclick=()=>{
+  try{
+   const s=JSON.parse(
+    localStorage.getItem(saveKey)
+   );
+
+   if(s&&ROLES[s.role]){
+    deploy(s);
+   }
+  }catch(e){}
+ };
+
+ $('closeModal').onclick=hideModal;
+
+ $('pause').onclick=()=>{
+  if(!S||S.ended)return;
+  S.playing=!S.playing;
+  render();
+ };
+
+ $('speed').onclick=()=>{
+  if(!S)return;
+
+  S.speed=
+   S.speed===1?2:
+   S.speed===2?4:1;
+
+  $('speed').textContent=S.speed+'×';
+ };
+
+ $('help').onclick=()=>S&&briefing();
+
+ $('aar').onclick=()=>S&&showAAR();
+
+ $('restart').onclick=()=>{
+  if(!confirm('Replace the saved mission?'))return;
+
+  localStorage.removeItem(saveKey);
+  location.reload();
+ };
+
+ $('resetMap').onclick=()=>{
+  map?.fitBounds(
+   [
+    [6,115],
+    [63,216]
+   ],
+   {
+    maxZoom:3
+   }
+  );
+ };
+
+ $('toggleTerrain').onclick=()=>{
+  satellite=!satellite;
+
+  $('toggleTerrain').textContent=
+   satellite?'TERRAIN':'SATELLITE';
+
+  setTiles();
+ };
+
+ $('mapHelp').onclick=()=>{
+  coach(
+   'think',
+   'Click a gold FOS or a moving plane. '+
+   'Zoom is limited to the Pacific region. '+
+   'Gold aircraft are cargo, blue friendly transit, '+
+   'red fictional exercise contacts.'
+  );
+ };
+
+ $('hint').onclick=()=>{
+  if(!S)return;
+
+  const t=S.tasks.find(
+   t=>[
+    'available',
+    'in_progress',
+    'awaiting_verification',
+    'ready_for_report'
+   ].includes(t.stage)
+  );
+
+  coach(
+   'think',
+   t
+    ? 'Open Objective #'+t.id+
+      ' and complete its next stage.'
+    : S.flights.some(f=>f.status==='HOLDING')
+     ? 'An aircraft is awaiting arrival coordination. '+
+       'Click the aircraft.'
+     : S.role==='MOB'
+      ? 'Click a gold FOS and request the five initial '+
+        'airfield RFI categories.'
+      : 'Monitor your role-specific request inbox.'
+  );
+ };
+
+ try{
+  const prev=JSON.parse(
+   localStorage.getItem(saveKey)
+  );
+
+  if(prev&&ROLES[prev.role]){
+   $('resume').classList.remove('hidden');
+  }
+ }catch(e){}
+
+ setupRoles();
+}
+
+function frame(now){
+ if(!previous)previous=now;
+
+ const dt=Math.min(
+  .05,
+  (now-previous)/1000
+ );
+
+ previous=now;
+
+ if(S){
+  sim(dt);
+
+  if(now-lastUI>320){
+   lastUI=now;
+   render();
+   drawMap();
+  }
+
+  if(now-lastSave>2500){
+   lastSave=now;
+   save();
+  }
+ }
+
+ requestAnimationFrame(frame);
+}
+
+bind();
+requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>
