@@ -1,0 +1,654 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AFEX | Airpower Command</title>
+<style>
+:root{
+  --bg:#060c16;
+  --panel:#101d30;
+  --border:#29415f;
+  --blue:#48d8f1;
+  --gold:#ffcc72;
+  --green:#62e1ae;
+  --red:#ff7285;
+  --text:#ecf4ff;
+  --muted:#9caec7;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+}
+button{font:inherit;cursor:pointer}
+header{
+  padding:15px 22px;border-bottom:1px solid var(--border);
+  background:#0d192a;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.logo{font-weight:900;letter-spacing:2px;font-size:22px}
+.logo span{color:var(--blue)}
+.sub{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:5px}
+.badge{
+  border:1px solid var(--blue);border-radius:6px;padding:9px 12px;
+  color:var(--blue);font-size:12px
+}
+nav{
+  display:flex;gap:7px;padding:12px 18px;overflow:auto;
+  background:#0a1422;border-bottom:1px solid var(--border)
+}
+nav button,.btn{
+  border:1px solid var(--border);background:#15263e;
+  color:var(--text);padding:11px 15px;border-radius:6px
+}
+nav button.active,.btn.primary{
+  background:var(--blue);color:#04121d;font-weight:bold
+}
+.btn:hover,nav button:hover{border-color:var(--blue)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+main{max-width:1500px;margin:auto;padding:18px}
+.page{display:none}.page.active{display:block}
+h1{font-size:26px;margin:0 0 10px}
+h2{font-size:18px;margin:0 0 12px;color:var(--blue)}
+p{line-height:1.6}
+.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.6fr 1fr;gap:15px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0}
+.card,.panel{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:17px
+}
+.card .value{font-size:28px;font-weight:900;color:var(--blue);margin:8px 0}
+.card .label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+.panel{margin-bottom:15px}
+.map{
+  height:420px;position:relative;overflow:hidden;border-radius:9px;
+  background:
+    linear-gradient(#2a476b35 1px,transparent 1px),
+    linear-gradient(90deg,#2a476b35 1px,transparent 1px),
+    radial-gradient(ellipse at 35% 45%,#17395a,#081526 70%);
+  background-size:42px 42px,42px 42px,100% 100%;
+  border:1px solid #315574;
+}
+.map::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0 4px,#ffffff03 5px 6px);
+  pointer-events:none
+}
+.mapTitle{position:absolute;left:14px;top:12px;font-size:12px;color:var(--blue);letter-spacing:2px}
+.node{
+  position:absolute;border:1px solid var(--blue);border-radius:8px;
+  background:#102a43dd;color:#fff;padding:8px 11px;
+  font-size:11px;transform:translate(-50%,-50%);
+  text-align:center;z-index:2
+}
+.node:hover{background:#255277}
+.node.red{border-color:var(--red);color:var(--red)}
+.node.selected{box-shadow:0 0 0 3px #48d8f155}
+.aircraft{
+  position:absolute;left:12%;top:40%;font-size:30px;
+  color:var(--blue);z-index:3;pointer-events:none;
+  filter:drop-shadow(0 0 8px #48d8f1);
+  animation:fly 8s linear infinite alternate
+}
+@keyframes fly{
+  0%{transform:translate(0,0) rotate(15deg)}
+  100%{transform:translate(250px,-100px) rotate(15deg)}
+}
+.line{
+  position:absolute;border-top:2px dashed #48d8f177;
+  transform-origin:left center;pointer-events:none
+}
+.status{color:var(--green);font-size:12px}
+.control{
+  padding:12px;background:#0b1728;border:1px solid var(--border);
+  border-radius:8px;margin:9px 0
+}
+.control label{display:block;margin-bottom:8px;color:var(--muted);font-size:12px}
+select,input{
+  background:#14263e;color:#fff;border:1px solid var(--border);
+  border-radius:5px;padding:10px;width:100%
+}
+.options{display:grid;gap:9px;margin:15px 0}
+.option{
+  text-align:left;background:#14243a;color:#fff;border:1px solid var(--border);
+  border-radius:8px;padding:13px
+}
+.option:hover{border-color:var(--blue)}
+.option.correct{background:#153d35;border-color:var(--green)}
+.option.wrong{background:#4a2030;border-color:var(--red)}
+#feedback,#quizFeedback{min-height:55px;line-height:1.5}
+.log{max-height:300px;overflow:auto;font-size:12px}
+.log div{padding:9px;border-bottom:1px solid #263b56;color:#b6cae0}
+.sectionTitle{font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:12px}
+.progress{height:9px;background:#283b53;border-radius:8px;overflow:hidden}
+.progress div{height:100%;background:var(--blue);width:0%;transition:width .3s}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.step{background:#0c1b2e;border:1px solid var(--border);border-radius:8px;padding:15px}
+.step strong{color:var(--gold)}
+#toast{
+  position:fixed;bottom:20px;right:20px;background:#133b40;
+  border:1px solid var(--blue);padding:13px;border-radius:8px;
+  display:none;z-index:10;max-width:320px
+}
+@media(max-width:850px){
+  .grid,.steps{grid-template-columns:1fr}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .map{height:350px}
+  .aircraft{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div>
+  <div class="logo">AFEX <span>// AIRPOWER COMMAND</span></div>
+  <div class="sub">INTERACTIVE AIR FORCE EMPLOYMENT TRAINING</div>
+ </div>
+ <div class="badge">TRAINING SIMULATOR • LOCAL SAVE</div>
+</header>
+
+<nav>
+ <button class="active" onclick="showPage('dashboard',this)">COMMAND CENTER</button>
+ <button onclick="showPage('tutorial',this)">LEARN AFEX</button>
+ <button onclick="showPage('mission',this)">MISSION SIMULATOR</button>
+ <button onclick="showPage('quiz',this)">DECISION DRILLS</button>
+ <button onclick="showPage('review',this)">AFTER-ACTION REVIEW</button>
+</nav>
+
+<main>
+<section id="dashboard" class="page active">
+ <h1>Mission Command Dashboard</h1>
+ <p class="muted">Welcome, Mission Commander. Prepare your team, plan the package, and complete your training objectives.</p>
+ <div class="cards">
+  <div class="card"><div class="label">Mission Score</div><div class="value" id="scoreA">0</div></div>
+  <div class="card"><div class="label">Current Turn</div><div class="value" id="turnA">1 / 6</div></div>
+  <div class="card"><div class="label">Readiness</div><div class="value" id="readyA">70%</div></div>
+  <div class="card"><div class="label">Quiz Accuracy</div><div class="value" id="quizA">0%</div></div>
+ </div>
+ <div class="grid">
+  <div class="panel">
+   <h2>Operations Visualization</h2>
+   <div class="map" id="mainMap">
+    <div class="mapTitle">TRAINING OPERATIONS DISPLAY // FICTIONAL</div>
+    <div class="line" style="left:24%;top:34%;width:52%;transform:rotate(15deg)"></div>
+    <button class="node" style="left:24%;top:34%" onclick="selectNode('Main Operating Base')">MAIN BASE<br>● READY</button>
+    <button class="node" style="left:55%;top:20%" onclick="selectNode('Recon Sector')">RECON<br>SECTOR</button>
+    <button class="node" style="left:72%;top:54%" onclick="selectNode('Mission Area')">MISSION<br>AREA</button>
+    <button class="node red" style="left:83%;top:26%" onclick="selectNode('Threat Sector')">THREAT<br>SECTOR</button>
+    <span class="aircraft">✈</span>
+   </div>
+   <p id="mapInfo" class="muted">Select a location on the map to inspect it.</p>
+  </div>
+  <div>
+   <div class="panel">
+    <div class="sectionTitle">COMMANDER'S INTENT</div>
+    <p>Develop an airpower employment plan that supports the assigned mission, protects personnel, and coordinates the force.</p>
+    <button class="btn primary" onclick="navigate('mission')">START MISSION →</button>
+   </div>
+   <div class="panel">
+    <div class="sectionTitle">STATUS REPORT</div>
+    <p class="status">● SIMULATION ONLINE</p>
+    <p class="muted">This simplified training environment is designed to practice decisions before your actual exercise.</p>
+    <div id="dashboardLog" class="log"></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section id="tutorial" class="page">
+ <h1>AFEX Training Academy</h1>
+ <p class="muted">Learn the basic concepts before entering the mission simulator.</p>
+ <div class="steps">
+  <div class="step">
+   <strong>01 // UNDERSTAND</strong>
+   <h2>What is AFEX?</h2>
+   <p>The Air Force Employment Exercise introduces airpower planning, mission coordination, and the decisions required to employ forces.</p>
+  </div>
+  <div class="step">
+   <strong>02 // PLAN</strong>
+   <h2>Build a Mission</h2>
+   <p>Understand the assigned task, available resources, objectives, and limitations before deciding on a course of action.</p>
+  </div>
+  <div class="step">
+   <strong>03 // PACKAGE</strong>
+   <h2>Force Packaging</h2>
+   <p>Combine complementary capabilities, such as reconnaissance, protection, and support, to accomplish the objective.</p>
+  </div>
+  <div class="step">
+   <strong>04 // COORDINATE</strong>
+   <h2>Work as a Team</h2>
+   <p>Communicate between roles, confirm responsibilities, and maintain a common understanding of the mission.</p>
+  </div>
+  <div class="step">
+   <strong>05 // EXECUTE</strong>
+   <h2>Monitor the Mission</h2>
+   <p>Observe changes, review new information, and adjust your plan when conditions change.</p>
+  </div>
+  <div class="step">
+   <strong>06 // REVIEW</strong>
+   <h2>After-Action Review</h2>
+   <p>Evaluate decisions, identify lessons learned, and explain what could be improved.</p>
+  </div>
+ </div>
+ <div class="panel" style="margin-top:16px">
+  <h2>Quick Memory Guide</h2>
+  <p><b style="color:var(--gold)">WHAT:</b> What does the mission require?</p>
+  <p><b style="color:var(--gold)">WHO:</b> Who and what capabilities are available?</p>
+  <p><b style="color:var(--gold)">HOW:</b> How will the team accomplish its task?</p>
+  <p><b style="color:var(--gold)">WHAT IF:</b> What happens when the situation changes?</p>
+  <button class="btn primary" onclick="navigate('quiz')">PRACTICE DECISIONS →</button>
+ </div>
+</section>
+
+<section id="mission" class="page">
+ <h1>Interactive Mission Simulator</h1>
+ <p class="muted">Six training turns. Select your support package, assess the situation, and make a command decision.</p>
+ <div class="cards">
+  <div class="card"><div class="label">Turn</div><div class="value" id="turnB">1</div></div>
+  <div class="card"><div class="label">Mission Points</div><div class="value" id="scoreB">0</div></div>
+  <div class="card"><div class="label">Readiness</div><div class="value" id="readyB">70%</div></div>
+  <div class="card"><div class="label">Resources</div><div class="value" id="resourcesB">100</div></div>
+ </div>
+ <div class="grid">
+  <div class="panel">
+   <div class="sectionTitle">SITUATION DISPLAY</div>
+   <h2 id="missionTitle">Turn 1 — Mission Preparation</h2>
+   <p id="missionText"></p>
+   <div class="map">
+    <div class="mapTitle">MISSION OPERATIONS BOARD</div>
+    <button class="node" style="left:18%;top:50%" onclick="selectNode('Departure Base')">DEPARTURE<br>BASE</button>
+    <button class="node" style="left:45%;top:23%" onclick="selectNode('Support Area')">SUPPORT<br>AREA</button>
+    <button class="node" style="left:74%;top:47%" onclick="selectNode('Objective Area')">OBJECTIVE<br>AREA</button>
+    <button class="node red" style="left:60%;top:73%" onclick="selectNode('Potential Threat')">POTENTIAL<br>THREAT</button>
+    <span class="aircraft">✈</span>
+   </div>
+  </div>
+  <div class="panel">
+   <div class="sectionTitle">MISSION CONTROL</div>
+   <div class="control">
+    <label for="package">SELECT SUPPORT PACKAGE</label>
+    <select id="package">
+     <option value="balanced">Balanced Package — Cost 20</option>
+     <option value="recon">Reconnaissance Priority — Cost 15</option>
+     <option value="escort">Protection Priority — Cost 25</option>
+    </select>
+   </div>
+   <p id="decisionPrompt"></p>
+   <div id="decisionOptions" class="options"></div>
+   <div id="feedback"></div>
+   <button id="nextTurn" class="btn primary" onclick="advanceTurn()" disabled>NEXT TURN →</button>
+  </div>
+ </div>
+ <div class="panel">
+  <h2>Mission Event Log</h2>
+  <div id="eventLog" class="log"></div>
+ </div>
+</section>
+
+<section id="quiz" class="page">
+ <h1>Decision Drills</h1>
+ <p class="muted">Choose the BEST answer. The explanation appears after you answer.</p>
+ <div class="panel" style="max-width:850px">
+  <div class="sectionTitle" id="quizNumber">QUESTION 1</div>
+  <div class="progress"><div id="quizProgress"></div></div>
+  <h2 id="quizQuestion" style="margin-top:22px"></h2>
+  <div class="options" id="quizOptions"></div>
+  <div id="quizFeedback"></div>
+  <button class="btn primary" id="quizNext" onclick="nextQuestion()" disabled>NEXT QUESTION →</button>
+  <button class="btn" onclick="restartQuiz()">RESTART QUIZ</button>
+ </div>
+</section>
+
+<section id="review" class="page">
+ <h1>After-Action Review</h1>
+ <p class="muted">Review your training performance and identify opportunities to improve.</p>
+ <div class="cards">
+  <div class="card"><div class="label">Mission Points</div><div class="value" id="finalScore">0</div></div>
+  <div class="card"><div class="label">Turns Completed</div><div class="value" id="finalTurns">0</div></div>
+  <div class="card"><div class="label">Decisions Correct</div><div class="value" id="finalCorrect">0</div></div>
+  <div class="card"><div class="label">Readiness</div><div class="value" id="finalReady">70%</div></div>
+ </div>
+ <div class="panel">
+  <h2>Commander Assessment</h2>
+  <p id="reviewText"></p>
+  <div class="sectionTitle">REFLECTION QUESTIONS</div>
+  <p>1. Did the plan directly support the objective?</p>
+  <p>2. Were available capabilities properly coordinated?</p>
+  <p>3. Did you adapt when new information appeared?</p>
+  <p>4. What would you improve during the next exercise?</p>
+  <button class="btn primary" onclick="resetMission()">RESTART MISSION</button>
+ </div>
+</section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+// Fictional, simplified educational scenarios.
+// These are not the official AFEX game engine or scoring rules.
+
+const missions=[
+ {
+  title:"Mission Preparation",
+  text:"Your team receives a training task. Several capabilities are available, but responsibilities have not yet been confirmed.",
+  prompt:"What should the Mission Commander do first?",
+  options:[
+   "Launch immediately and resolve confusion later",
+   "Clarify the objective, roles, and available capabilities",
+   "Assign every aircraft to the same task",
+   "Wait until the mission is almost complete"
+  ],
+  answer:1,
+  why:"A shared understanding of the objective and responsibilities helps the team build an effective plan."
+ },
+ {
+  title:"Information Gap",
+  text:"The team lacks current information about conditions in the objective area.",
+  prompt:"Which action BEST supports informed planning?",
+  options:[
+   "Ignore the information gap",
+   "Commit every resource immediately",
+   "Prioritize reconnaissance and share findings",
+   "Stop communicating with supporting teams"
+  ],
+  answer:2,
+  why:"Reconnaissance helps reduce uncertainty before important decisions."
+ },
+ {
+  title:"Force Packaging",
+  text:"A mission requires several complementary capabilities, but each available resource has limitations.",
+  prompt:"What is the BEST planning approach?",
+  options:[
+   "Select capabilities that complement the mission requirements",
+   "Choose aircraft only by appearance",
+   "Avoid coordinating supporting capabilities",
+   "Assign all personnel to one unrelated task"
+  ],
+  answer:0,
+  why:"A force package should be built around the mission and the complementary effects needed."
+ },
+ {
+  title:"Coordination Challenge",
+  text:"Two teams are working from different assumptions about the same mission timeline.",
+  prompt:"How should the commander respond?",
+  options:[
+   "Allow both teams to follow conflicting timelines",
+   "Cancel the mission without reviewing the issue",
+   "Only inform one team",
+   "Confirm the common timeline and communicate changes"
+  ],
+  answer:3,
+  why:"Coordinating information across teams helps prevent avoidable mistakes."
+ },
+ {
+  title:"Changing Conditions",
+  text:"New information changes the assumptions used during the original plan.",
+  prompt:"What should leadership do?",
+  options:[
+   "Continue without reviewing the information",
+   "Reassess the plan and adjust the course of action",
+   "Ignore the report until the mission ends",
+   "Remove all supporting capabilities automatically"
+  ],
+  answer:1,
+  why:"Effective execution includes reassessment when conditions or assumptions change."
+ },
+ {
+  title:"Mission Review",
+  text:"The team completes its final training activity. Some tasks succeeded, while others revealed coordination gaps.",
+  prompt:"What is the BEST final action?",
+  options:[
+   "Finish without recording any lessons",
+   "Focus only on the highest score",
+   "Conduct an after-action review and identify improvements",
+   "Delete all team observations"
+  ],
+  answer:2,
+  why:"An after-action review helps the team understand performance and improve future execution."
+ }
+];
+
+const questions=[
+ ["What is the primary purpose of force packaging?",[
+ "Combine complementary capabilities to support a mission",
+ "Use every available aircraft regardless of purpose",
+ "Avoid coordination between teams",
+ "Assign all missions to one capability"],0,
+ "Force packaging organizes complementary capabilities around mission requirements."],
+ ["What does SMART help teams develop?",[
+ "Random flight schedules","Specific and measurable objectives",
+ "Aircraft identification numbers","Unrelated task lists"],1,
+ "SMART objectives are specific, measurable, attainable, realistic, and timely."],
+ ["What is the BEST response to an important information gap?",[
+ "Assume the missing information","Ignore uncertainty",
+ "Gather and evaluate relevant information","Choose the fastest option"],2,
+ "Good planning identifies and reduces important uncertainty."],
+ ["Which behavior demonstrates effective mission coordination?",[
+ "Keeping all changes secret","Changing tasks without notification",
+ "Avoiding staff input","Sharing relevant updates with all affected teams"],3,
+ "Shared information supports unity of effort."],
+ ["What is the main purpose of an after-action review?",[
+ "Identify strengths, weaknesses, and lessons learned",
+ "Assign blame without evidence","Ignore the outcome",
+ "Repeat every action without analysis"],0,
+ "An AAR supports learning and continuous improvement."],
+ ["Which statement BEST describes operational flexibility?",[
+ "Never change a plan","Adapt when mission conditions change",
+ "Ignore new information","Avoid planning for alternatives"],1,
+ "Flexibility allows teams to respond to changing conditions."],
+ ["Which should guide the choice of a mission package?",[
+ "The greatest number of aircraft","The easiest option for one person",
+ "The assigned objective and required effects","A random selection"],2,
+ "Mission requirements determine which capabilities are most useful."],
+ ["What should a commander do when teams misunderstand the mission?",[
+ "Continue despite the disagreement","Ignore the team",
+ "Assign more unrelated tasks","Clarify the mission and confirm understanding"],3,
+ "Clarifying intent and responsibilities creates a common plan."]
+];
+
+const KEY="afex_command_v1";
+
+function fresh(){
+ return {turn:0,score:0,readiness:70,resources:100,
+  correct:0,answered:false,finished:false,
+  quizIndex:0,quizCorrect:0,quizAnswered:false,
+  quizTotal:0,events:["Training simulation initialized."]};
+}
+let state=fresh();
+try{
+ const saved=JSON.parse(localStorage.getItem(KEY));
+ if(saved&&typeof saved.turn==="number")state={...fresh(),...saved};
+}catch(e){}
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function el(id){return document.getElementById(id);}
+function clamp(x,min,max){return Math.max(min,Math.min(max,x));}
+function toast(message){
+ const t=el("toast");t.textContent=message;t.style.display="block";
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(()=>t.style.display="none",2600);
+}
+function showPage(id,button){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ el(id).classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ update();
+}
+function navigate(id){
+ const button=[...document.querySelectorAll("nav button")]
+  .find(b=>b.getAttribute("onclick").includes("'"+id+"'"));
+ showPage(id,button);
+ window.scrollTo(0,0);
+}
+function selectNode(name){
+ el("mapInfo").textContent="SELECTED LOCATION: "+name;
+ toast("Map location selected: "+name);
+}
+function addEvent(message){
+ state.events.unshift("TURN "+Math.min(state.turn+1,6)+" • "+message);
+ state.events=state.events.slice(0,30);
+}
+function update(){
+ el("scoreA").textContent=state.score;
+ el("turnA").textContent=Math.min(state.turn+1,6)+" / 6";
+ el("readyA").textContent=state.readiness+"%";
+ el("quizA").textContent=state.quizTotal?
+ Math.round(state.quizCorrect/state.quizTotal*100)+"%":"0%";
+ el("turnB").textContent=Math.min(state.turn+1,6);
+ el("scoreB").textContent=state.score;
+ el("readyB").textContent=state.readiness+"%";
+ el("resourcesB").textContent=state.resources;
+ el("dashboardLog").innerHTML="";
+ el("eventLog").innerHTML="";
+ for(const event of state.events){
+  for(const id of ["dashboardLog","eventLog"]){
+   const div=document.createElement("div");
+   div.textContent=event;el(id).appendChild(div);
+  }
+ }
+ renderMission();
+ renderQuiz();
+ renderReview();
+ save();
+}
+function renderMission(){
+ if(state.finished){
+  el("missionTitle").textContent="SIMULATION COMPLETE";
+  el("missionText").textContent="All training turns are finished. Open the after-action review.";
+  el("decisionPrompt").textContent="Mission complete.";
+  el("decisionOptions").innerHTML="";
+  el("feedback").textContent="Review your results or restart the mission.";
+  el("nextTurn").disabled=true;
+  el("nextTurn").textContent="MISSION COMPLETE";
+  return;
+ }
+ const m=missions[state.turn];
+ el("missionTitle").textContent="TURN "+(state.turn+1)+" — "+m.title;
+ el("missionText").textContent=m.text;
+ el("decisionPrompt").textContent=m.prompt;
+ const box=el("decisionOptions");
+ box.innerHTML="";
+ m.options.forEach((option,index)=>{
+  const b=document.createElement("button");
+  b.className="option";
+  b.textContent=String.fromCharCode(65+index)+". "+option;
+  b.disabled=state.answered;
+  if(state.answered&&index===m.answer)b.classList.add("correct");
+  if(state.answered&&index===state.lastAnswer&&index!==m.answer)b.classList.add("wrong");
+  b.onclick=()=>answerMission(index);
+  box.appendChild(b);
+ });
+ el("feedback").textContent=state.answered?
+ state.lastCorrect?"CORRECT — "+m.why:"REVIEW — "+m.why:"";
+ el("nextTurn").disabled=!state.answered;
+ el("nextTurn").textContent=state.turn===5?"FINISH MISSION →":"NEXT TURN →";
+}
+function answerMission(index){
+ if(state.answered||state.finished)return;
+ const m=missions[state.turn];
+ const pkg=el("package").value;
+ const costs={balanced:20,recon:15,escort:25};
+ const cost=costs[pkg];
+ if(state.resources<cost){toast("Not enough resources. Choose another package.");return;}
+ state.resources-=cost;
+ state.answered=true;
+ state.lastAnswer=index;
+ state.lastCorrect=index===m.answer;
+ if(state.lastCorrect){
+  state.score+=20;
+  state.correct++;
+  state.readiness=clamp(state.readiness+5,0,100);
+  addEvent("Objective achieved. +20 mission points.");
+  toast("MISSION SUCCESS • +20 POINTS");
+ }else{
+  state.readiness=clamp(state.readiness-10,0,100);
+  addEvent("Decision needs improvement. Review the feedback.");
+  toast("DECISION REVIEW REQUIRED");
+ }
+ save();update();
+}
+function advanceTurn(){
+ if(!state.answered)return;
+ if(state.turn>=5){
+  state.finished=true;
+  addEvent("Training mission complete.");
+  update();navigate("review");return;
+ }
+ state.turn++;
+ state.answered=false;
+ state.resources=clamp(state.resources+18,0,100);
+ addEvent("New mission turn initiated. Resources replenished.");
+ update();
+}
+function renderQuiz(){
+ const index=state.quizIndex;
+ const q=questions[index];
+ el("quizNumber").textContent="QUESTION "+(index+1)+" OF "+questions.length;
+ el("quizProgress").style.width=((index+1)/questions.length*100)+"%";
+ el("quizQuestion").textContent=q[0];
+ el("quizOptions").innerHTML="";
+ q[1].forEach((option,i)=>{
+  const b=document.createElement("button");
+  b.className="option";
+  b.textContent=String.fromCharCode(65+i)+". "+option;
+  b.disabled=state.quizAnswered;
+  if(state.quizAnswered&&i===q[2])b.classList.add("correct");
+  if(state.quizAnswered&&i===state.quizLast&&i!==q[2])b.classList.add("wrong");
+  b.onclick=()=>answerQuiz(i);
+  el("quizOptions").appendChild(b);
+ });
+ el("quizFeedback").textContent=state.quizAnswered?q[3]:"";
+ el("quizNext").disabled=!state.quizAnswered;
+ el("quizNext").textContent=index===questions.length-1?"FINISH QUIZ →":"NEXT QUESTION →";
+}
+function answerQuiz(i){
+ if(state.quizAnswered)return;
+ state.quizAnswered=true;
+ state.quizLast=i;
+ state.quizTotal++;
+ if(i===questions[state.quizIndex][2])state.quizCorrect++;
+ update();
+ toast(i===questions[state.quizIndex][2]?"Correct answer!":"Review the explanation.");
+}
+function nextQuestion(){
+ if(!state.quizAnswered)return;
+ if(state.quizIndex===questions.length-1){
+  toast("Drills completed! Review your score.");
+  navigate("review");return;
+ }
+ state.quizIndex++;
+ state.quizAnswered=false;
+ update();
+}
+function restartQuiz(){
+ state.quizIndex=0;state.quizCorrect=0;
+ state.quizTotal=0;state.quizAnswered=false;
+ update();toast("Quiz restarted.");
+}
+function renderReview(){
+ el("finalScore").textContent=state.score;
+ el("finalTurns").textContent=state.finished?6:state.turn;
+ el("finalCorrect").textContent=state.correct+" / 6";
+ el("finalReady").textContent=state.readiness+"%";
+ el("reviewText").textContent=state.finished?
+ "You completed the six-turn AFEX training exercise. Your performance reflects the decisions made during the simplified simulation. Review the lessons and try again to improve your results.":
+ "Your exercise is still in progress. Complete the mission turns to receive your full assessment.";
+}
+function resetMission(){
+ if(!confirm("Restart the mission? Your current mission score will reset."))return;
+ const quiz={quizIndex:state.quizIndex,quizCorrect:state.quizCorrect,
+  quizAnswered:state.quizAnswered,quizTotal:state.quizTotal};
+ state={...fresh(),...quiz};
+ update();navigate("mission");
+}
+update();
+</script>
+</body>
+</html>
