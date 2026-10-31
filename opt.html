@@ -1,0 +1,942 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OPS | Live Command Simulator</title>
+<style>
+:root{
+--bg:#040c18;--panel:#0d2235;--border:#32556f;
+--cyan:#5be5ff;--green:#79edb6;--gold:#ffd27b;
+--red:#ff728a;--text:#eff8ff;--muted:#a4b9cf
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:13px system-ui,Arial}
+button,select{font:inherit;color:var(--text);background:#19374e;border:1px solid #476a83;border-radius:6px;padding:10px;cursor:pointer}
+button:hover{border-color:var(--cyan);background:#24516b}
+button:disabled{opacity:.5;cursor:not-allowed}
+.primary,.active{background:#0d809d;border-color:var(--cyan)}
+header{background:#081727;border-bottom:1px solid var(--border);padding:13px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+header strong{font-size:19px;letter-spacing:2px}
+header strong span{color:var(--cyan)}
+.stats{display:flex;gap:7px;flex-wrap:wrap}
+.pill{border:1px solid #335a70;padding:8px;border-radius:5px;font:12px monospace}
+.pill b{color:var(--gold)}
+.shell{display:grid;grid-template-columns:235px minmax(0,1fr) 265px;gap:11px;padding:11px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:11px}
+h3{font-size:12px;color:var(--cyan);letter-spacing:1.3px;margin:0 0 13px}
+.full{display:block;width:100%;margin:7px 0;text-align:left}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.row button{flex:1}
+.stat{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #304e63}
+.stat b{color:var(--gold)}
+.muted{color:var(--muted);line-height:1.7}
+.notice{background:#15384a;border-left:3px solid var(--cyan);padding:12px;line-height:1.7}
+#map{width:100%;height:520px;display:block;background:#082439;border:1px solid #416c84;border-radius:8px;cursor:crosshair;touch-action:none}
+#feed{height:205px;overflow:auto}
+.entry{border-bottom:1px solid #304d62;padding:9px 0;line-height:1.6}
+.entry b{color:var(--gold)}
+#lesson{background:#123947;border:1px solid var(--cyan);padding:15px;border-radius:8px;margin-top:10px}
+#lesson[hidden]{display:none}
+#overlay{position:fixed;inset:0;background:#020812e8;display:none;align-items:center;justify-content:center;z-index:100;padding:15px}
+#overlay.show{display:flex}
+.dialog{background:linear-gradient(145deg,#142e45,#091827);border:1px solid #52829d;border-radius:14px;padding:25px;width:min(670px,100%);max-height:90vh;overflow:auto;line-height:1.7}
+.dialog h2{color:var(--cyan)}
+.dialog button{margin:6px 0}
+.choice{display:block;width:100%;text-align:left;padding:14px}
+.timer{height:9px;background:#294258;border-radius:6px;overflow:hidden}
+#timerBar{height:100%;background:var(--red);width:100%}
+kbd{background:#1d4258;padding:3px;border-radius:3px}
+footer{color:var(--muted);text-align:center;padding:15px;font-size:11px}
+a{color:var(--cyan)}
+@media(max-width:1100px){.shell{grid-template-columns:210px 1fr}.right{grid-column:1/-1}}
+@media(max-width:700px){.shell{display:block}#map{height:380px}}
+</style>
+</head>
+<body>
+
+<header>
+<div>
+<strong>OPS <span>// LIVE COMMAND</span></strong>
+<div class="muted">OPERATION PACIFIC SHIELD — TRAINING SIMULATOR</div>
+</div>
+<div class="stats">
+<div class="pill">TIME <b id="clock">00:00</b></div>
+<div class="pill">TURN <b id="turn">1</b></div>
+<div class="pill">MP <b id="mp">0</b></div>
+<div class="pill">PRESSURE <b id="pressure">0</b></div>
+<div class="pill">RATING <b id="rating">TRAINEE</b></div>
+<div class="pill" id="difficulty">BEGINNER</div>
+</div>
+</header>
+
+<div class="shell">
+
+<aside>
+<div class="panel">
+<h3>MISSION COMMAND</h3>
+<div class="notice" id="mission">
+Establish and sustain Forward Operating Sites while responding to computer-controlled challenges.
+</div>
+<div class="stat"><span>Mission target</span><b id="goal"></b></div>
+<div class="stat"><span>Resources</span><b id="credits"></b></div>
+<div class="stat"><span>Active FOS</span><b id="activeCount"></b></div>
+<div class="stat"><span>Decisions</span><b id="decisions">0</b></div>
+<button class="full primary" id="play" onclick="toggle()">Ⅱ PAUSE MISSION</button>
+<div class="row">
+<button onclick="setSpeed(1)">1×</button>
+<button onclick="setSpeed(2)">2×</button>
+<button onclick="setSpeed(4)">4×</button>
+</div>
+<button class="full" onclick="startTutorial()">◈ GUIDED TUTORIAL</button>
+<button class="full" onclick="review()">▤ AFTER-ACTION REVIEW</button>
+<button class="full" onclick="restart()">↻ RESTART EXERCISE</button>
+<a href="./index.html">← RETURN TO HOME</a>
+</div>
+
+<div class="panel">
+<h3>COMMAND ROLE</h3>
+<p class="muted">Switch roles to learn their responsibilities. This is local single-player training.</p>
+<div class="row" id="roles">
+<button data-role="CAOC" class="active">CAOC</button>
+<button data-role="MOB">MOB</button>
+<button data-role="CSpOC">CSpOC</button>
+<button data-role="MEDCOM">MEDCOM</button>
+</div>
+<p class="muted" id="roleHelp"></p>
+</div>
+
+<div class="panel">
+<h3>MISSION OBJECTIVES</h3>
+<div id="objectives"></div>
+</div>
+</aside>
+
+<main>
+<div class="panel">
+<div class="row">
+<h3 style="flex:4">LIVE PACIFIC EXERCISE BOARD</h3>
+<button onclick="zoom(1.2)">＋</button>
+<button onclick="zoom(.8)">－</button>
+<button onclick="centerMap()">CENTER</button>
+</div>
+<canvas id="map"></canvas>
+<div class="notice" id="hint">
+Select a green Forward Operating Site to begin.
+</div>
+
+<div id="lesson" hidden>
+<h3 id="lessonTitle">TUTORIAL</h3>
+<p id="lessonText"></p>
+<button id="nextLesson" onclick="advanceLesson()">NEXT STEP</button>
+<button onclick="stopTutorial()">EXIT TUTORIAL</button>
+</div>
+</div>
+
+<div class="panel">
+<h3>LIVE EVENTS — WHAT HAPPENED AND WHY</h3>
+<div id="feed" role="log" aria-live="polite"></div>
+</div>
+</main>
+
+<aside class="right">
+<div class="panel">
+<h3>SELECTED FORWARD OPERATING SITE</h3>
+<div id="selection"></div>
+
+<h3 style="margin-top:18px">COMMAND ACTIONS</h3>
+<button class="full" onclick="action('assess')">◉ REQUEST RFI / ASSESS</button>
+<button class="full" onclick="action('airlift')">✈ DISPATCH SUPPLY AIRLIFT</button>
+<button class="full" onclick="action('activate')">⬡ ACTIVATE FOS</button>
+<button class="full" onclick="action('protect')">◇ IMPROVE PROTECTION</button>
+<button class="full" onclick="action('care')">✚ SUSTAINMENT / MEDICAL CARE</button>
+<button class="full" onclick="action('intel')">◈ SPACE / ISR SUPPORT</button>
+</div>
+
+<div class="panel">
+<h3>LIVE FORCE STATUS</h3>
+<div class="stat"><span>Aircraft en route</span><b id="flights">0</b></div>
+<div class="stat"><span>Events</span><b id="eventCount">0</b></div>
+<div class="stat"><span>Threat level</span><b id="threatLevel">LOW</b></div>
+<div class="stat"><span>Simulation</span><b id="status">LIVE</b></div>
+<p class="muted" id="advisor">
+The exercise advisor explains operational consequences.
+</p>
+</div>
+</aside>
+
+</div>
+
+<footer>
+Independent educational prototype. The map, scoring, resource costs, and computer adjudication are illustrative—not official OPS rules or the pacsim engine.
+</footer>
+
+<div id="overlay">
+<div class="dialog">
+<h2 id="dialogTitle"></h2>
+<div id="dialogBody"></div>
+<div id="decisionTimer" hidden>
+<p id="countdown"></p>
+<div class="timer"><div id="timerBar"></div></div>
+</div>
+<div id="dialogChoices"></div>
+<button id="closeButton" class="primary" onclick="closeDialog()">CONTINUE</button>
+</div>
+</div>
+
+<script>
+"use strict";
+
+const $=id=>document.getElementById(id);
+const canvas=$("map"),ctx=canvas.getContext("2d");
+const W=1200,H=760;
+const origin={x:235,y:570};
+
+const query=new URLSearchParams(location.search);
+const requested=query.get("level");
+const level=["beginner","intermediate","expert"].includes(requested)
+?requested:"beginner";
+
+const settings={
+beginner:{goal:75,credits:30,event:23,damage:1,limit:330,decision:35},
+intermediate:{goal:110,credits:23,event:15,damage:2,limit:260,decision:22},
+expert:{goal:145,credits:18,event:10,damage:3,limit:210,decision:12}
+};
+const cfg=settings[level];
+
+const places=[
+["FOS Alpha",850,275],
+["FOS Bravo",970,440],
+["FOS Charlie",650,380],
+["FOS Delta",1050,155]
+];
+
+const tutorials=[
+["Select a forward site","Click a green FOS marker on the exercise map.",s=>s.selectedOnce],
+["Assess the location","Press REQUEST RFI / ASSESS to learn the site's requirements.",s=>s.sites.some(x=>x.assessed)],
+["Dispatch supply airlift","Press DISPATCH SUPPLY AIRLIFT at an assessed location.",s=>s.sent>0],
+["Observe the movement","Resume the clock. Watch the aircraft reach its destination.",s=>s.delivered>0],
+["Activate the site","Press ACTIVATE FOS after the supply delivery arrives.",s=>s.sites.some(x=>x.active)],
+["Improve protection","Select CAOC and press IMPROVE PROTECTION at an operational FOS.",s=>s.sites.some(x=>x.protection>0)],
+["Improve sustainment","Select MOB or MEDCOM and provide care at an operational FOS.",s=>s.sites.some(x=>x.care>0)],
+["Review mission results","Open AFTER-ACTION REVIEW to examine performance.",s=>s.reviewed]
+];
+
+let S,selected=0,role="CAOC",playing=true,speed=1;
+let camera={x:0,y:0,z:1},drag=null,previous=0;
+let tutorialStep=-1,challenge=null,deadline=0;
+let audioContext=null,audioReady=false;
+
+function reset(){
+ S={
+ time:0,turn:1,points:0,pressure:0,
+ credits:cfg.credits,ended:false,
+ sent:0,delivered:0,events:0,
+ decisions:0,effective:0,reviewed:false,
+ selectedOnce:false,lastEvent:0,
+ flights:[],
+ sites:places.map(([name,x,y])=>({
+  name,x,y,assessed:false,supplies:0,
+  active:false,protection:0,care:0,disrupted:0
+ }))
+ };
+ selected=0;role="CAOC";playing=true;speed=1;
+ tutorialStep=-1;challenge=null;
+ $("feed").replaceChildren();
+ $("lesson").hidden=true;
+ $("overlay").classList.remove("show");
+ log("MISSION STARTED",
+ "The exercise clock is live. Assess a location, dispatch supplies, and establish a forward site.");
+ drawUI();
+}
+
+function log(title,why){
+ S.events++;
+ const entry=document.createElement("div");
+ entry.className="entry";
+ const heading=document.createElement("b");
+ heading.textContent="T+"+Math.floor(S.time)+" | "+title;
+ const detail=document.createElement("div");
+ detail.textContent=why;
+ entry.append(heading,detail);
+ $("feed").prepend(entry);
+ $("hint").textContent=title+" — "+why;
+ $("advisor").textContent=why;
+ while($("feed").children.length>55)$("feed").lastChild.remove();
+}
+
+function alertSound(freq=800){
+ if(!audioReady)return;
+ try{
+  audioContext ||= new (window.AudioContext||window.webkitAudioContext)();
+  const o=audioContext.createOscillator();
+  const g=audioContext.createGain();
+  o.frequency.value=freq;
+  o.type="sine";
+  g.gain.value=.04;
+  o.connect(g);g.connect(audioContext.destination);
+  o.start();o.stop(audioContext.currentTime+.15);
+ }catch(e){}
+}
+document.addEventListener("pointerdown",()=>audioReady=true,{once:true});
+
+function deny(message){log("ORDER NOT AVAILABLE",message)}
+
+function spend(n){
+ if(S.credits<n){
+  deny("Insufficient resources. You need "+n+" credits.");
+  return false;
+ }
+ S.credits-=n;
+ return true;
+}
+
+function chooseSite(i){
+ selected=i;S.selectedOnce=true;
+ log("SITE SELECTED",
+ S.sites[i].name+" selected. Examine its readiness and choose a command action.");
+ drawUI();checkTutorial();
+}
+
+function action(type){
+ if(S.ended)return;
+ const s=S.sites[selected];
+
+ if(type==="assess"){
+  if(!["CAOC","MOB"].includes(role))return deny("Use CAOC or MOB for site assessment.");
+  if(s.assessed)return deny("This location has already been assessed.");
+  s.assessed=true;
+  log("RFI COMPLETED",
+  "The site's requirements are now known. Assessment reduces uncertainty before committing resources.");
+ }
+
+ if(type==="airlift"){
+  if(!["CAOC","MOB"].includes(role))return deny("Use CAOC or MOB to dispatch airlift.");
+  if(!s.assessed)return deny("Assess this site before dispatching supplies.");
+  if(!spend(2))return;
+  S.sent++;
+  S.flights.push({
+   id:"AIRLIFT-"+S.sent,
+   to:selected,x:origin.x,y:origin.y,
+   progress:0
+  });
+  log("SUPPLY AIRLIFT DEPARTED",
+  "A simulated transport is carrying resources toward "+s.name+". Watch its progress on the map.");
+ }
+
+ if(type==="activate"){
+  if(!["CAOC","MOB"].includes(role))return deny("Use CAOC or MOB to activate a site.");
+  if(!s.assessed)return deny("Assess the location first.");
+  if(s.active)return deny("The site is already operational.");
+  if(s.supplies<1)return deny("One supply delivery is required before activation.");
+  if(!spend(3))return;
+  s.supplies--;s.active=true;S.points+=10;
+  log("FORWARD SITE ACTIVATED",
+  s.name+" is now operational and can contribute mission points. Protection and sustainment still matter.");
+ }
+
+ if(type==="protect"){
+  if(role!=="CAOC")return deny("Select CAOC to coordinate protection.");
+  if(!s.active)return deny("Activate the site before improving protection.");
+  if(!spend(2))return;
+  s.protection++;
+  log("PROTECTION IMPROVED",
+  "Additional protection reduces the impact of future simulated disruptions.");
+ }
+
+ if(type==="care"){
+  if(!["MEDCOM","MOB"].includes(role))return deny("Use MEDCOM or MOB for sustainment.");
+  if(!s.active)return deny("Activate the site first.");
+  if(!spend(2))return;
+  s.care++;
+  S.pressure=Math.max(0,S.pressure-3);
+  log("SUSTAINMENT IMPROVED",
+  "Health and welfare support lowers pressure and protects readiness.");
+ }
+
+ if(type==="intel"){
+  if(role!=="CSpOC")return deny("Select CSpOC to request space and ISR support.");
+  if(!spend(2))return;
+  S.points+=3;
+  log("SPACE / ISR SUPPORT",
+  "Additional information reduced uncertainty and contributed simulated mission points.");
+ }
+
+ drawUI();checkTutorial();
+}
+
+function moveFlights(dt){
+ for(let i=S.flights.length-1;i>=0;i--){
+  const f=S.flights[i],target=S.sites[f.to];
+  f.progress=Math.min(1,f.progress+dt/12);
+  f.x=origin.x+(target.x-origin.x)*f.progress;
+  f.y=origin.y+(target.y-origin.y)*f.progress;
+  if(f.progress>=1){
+   target.supplies++;
+   S.delivered++;
+   S.flights.splice(i,1);
+   log("CARGO DELIVERED",
+   "Supplies arrived at "+target.name+". They are available for FOS activation.");
+  }
+ }
+}
+
+function completeTurn(){
+ S.turn++;
+ let earned=0;
+ for(const s of S.sites){
+  if(!s.active)continue;
+  const n=Math.max(1,4-s.disrupted);
+  earned+=n;
+  s.disrupted=Math.max(0,s.disrupted-1);
+  if(s.care===0)S.pressure+=1;
+  else S.pressure=Math.max(0,S.pressure-1);
+ }
+ S.points+=earned;
+ log("TURN COMPLETED",
+ "Operational sites earned "+earned+" mission points. Sustainment and disruption affect readiness.");
+}
+
+function pressure(n){
+ S.pressure=Math.max(0,S.pressure+n);
+}
+
+function weakestSite(){
+ const list=S.sites.filter(x=>x.active);
+ return list.sort((a,b)=>
+ (a.protection*3+a.care*2-a.disrupted*2)-
+ (b.protection*3+b.care*2-b.disrupted*2))[0]||null;
+}
+
+function buildChallenge(){
+ const site=weakestSite();
+
+ if(!site){
+  pressure(cfg.damage);
+  log("OPERATIONAL PRESSURE",
+  "The computer opponent increased pressure because no forward operating site is operational.");
+  return;
+ }
+
+ if(site.protection===0){
+  return {
+   title:"SITE PROTECTION ALERT",
+   text:site.name+" has limited protection. What is your command decision?",
+   site,
+   options:[
+    {text:"Improve protection (2 credits)",
+     apply:()=>{
+      if(!spend(2))return {good:false,why:"Insufficient resources. Protection could not be improved."};
+      site.protection++;S.points+=2;
+      return {good:true,why:"Protection improved. Future disruptions will have less impact."};
+     }},
+    {text:"Request additional situational awareness",
+     apply:()=>{
+      S.points+=1;pressure(1);
+      return {good:true,why:"Situational awareness improved, but the site's physical vulnerability remains."};
+     }},
+    {text:"Continue without additional measures",
+     apply:()=>{
+      site.disrupted+=cfg.damage;pressure(cfg.damage*2);
+      return {good:false,why:"Unaddressed vulnerability increased disruption and pressure."};
+     }}
+   ]
+  };
+ }
+
+ if(site.care===0){
+  return {
+   title:"SUSTAINMENT EMERGENCY",
+   text:"Personnel at "+site.name+" are experiencing a sustainment shortfall.",
+   site,
+   options:[
+    {text:"Provide medical and sustainment support (2 credits)",
+     apply:()=>{
+      if(!spend(2))return {good:false,why:"Resources were insufficient to provide support."};
+      site.care++;pressure(-3);S.points+=2;
+      return {good:true,why:"Sustainment support reduced pressure and improved readiness."};
+     }},
+    {text:"Request an additional assessment",
+     apply:()=>{
+      pressure(cfg.damage);
+      return {good:false,why:"The assessment may help later, but the immediate shortfall remains."};
+     }},
+    {text:"Delay sustainment until the next turn",
+     apply:()=>{
+      pressure(cfg.damage*3);
+      return {good:false,why:"Delaying essential support increased pressure."};
+     }}
+   ]
+  };
+ }
+
+ const events=[
+  {
+   title:"AIRLIFT CAPACITY CONSTRAINT",
+   text:"The mobility schedule is congested. Decide how to protect essential deliveries.",
+   options:[
+    {text:"Prioritize critical supplies",
+     apply:()=>{S.points+=4;return {good:true,why:"Critical resources received priority and progress continued."}}},
+    {text:"Maintain the current schedule",
+     apply:()=>{pressure(3);return {good:false,why:"Congestion caused further operational delays."}}},
+    {text:"Cancel all airlift missions",
+     apply:()=>{pressure(5);return {good:false,why:"Canceling the entire schedule reduced progress."}}}
+   ]
+  },
+  {
+   title:"CHANGING HOST-NATION CONDITIONS",
+   text:"A fictional partner location reports new access limitations.",
+   options:[
+    {text:"Reassess access and coordinate an alternate plan",
+     apply:()=>{S.points+=4;return {good:true,why:"The revised plan preserved flexibility."}}},
+    {text:"Assume access permissions are unchanged",
+     apply:()=>{pressure(4);return {good:false,why:"Unverified assumptions caused delays."}}},
+    {text:"Abandon all locations",
+     apply:()=>{pressure(5);return {good:false,why:"Unnecessary abandonment reduced operational capability."}}}
+   ]
+  },
+  {
+   title:"FORWARD SITE READINESS DECLINING",
+   text:site.name+" is reporting lower operational readiness.",
+   options:[
+    {text:"Temporarily reduce workload and restore capability",
+     apply:()=>{site.disrupted=Math.max(0,site.disrupted-2);S.points+=3;return {good:true,why:"The readiness measures improved site performance."}}},
+    {text:"Increase workload without additional resources",
+     apply:()=>{site.disrupted+=2;pressure(4);return {good:false,why:"The additional workload increased disruption."}}},
+    {text:"Wait without changing the plan",
+     apply:()=>{pressure(3);return {good:false,why:"Delay prolonged the readiness problem."}}}
+   ]
+  }
+ ];
+
+ const e=events[Math.floor(Math.random()*events.length)];
+ return {...e,site};
+}
+
+function opponentTurn(){
+ if(challenge||S.ended)return;
+ const c=buildChallenge();
+ if(!c)return;
+ challenge=c;
+ const duration=cfg.decision*1000;
+ deadline=performance.now()+duration;
+ $("dialogTitle").textContent="⚠ "+c.title;
+ $("dialogBody").textContent=c.text;
+ $("dialogChoices").replaceChildren();
+ $("decisionTimer").hidden=false;
+ $("closeButton").hidden=true;
+
+ c.options.forEach((o,i)=>{
+  const b=document.createElement("button");
+  b.className="choice";
+  b.textContent=String.fromCharCode(65+i)+". "+o.text;
+  b.onclick=()=>resolveChallenge(i);
+  $("dialogChoices").appendChild(b);
+ });
+
+ $("overlay").classList.add("show");
+ alertSound(950);
+ log("URGENT COMMAND DECISION",
+ c.title+" — A response is required before the countdown expires.");
+}
+
+function resolveChallenge(i){
+ if(!challenge)return;
+ const c=challenge;
+ challenge=null;
+ $("overlay").classList.remove("show");
+ $("decisionTimer").hidden=true;
+ $("closeButton").hidden=false;
+
+ let result;
+ if(i<0){
+  pressure(cfg.damage*3);
+  result={good:false,why:"The decision window expired. No corrective action was taken."};
+ }else{
+  result=c.options[i].apply();
+ }
+ S.decisions++;
+ if(result.good)S.effective++;
+
+ log(result.good?"EFFECTIVE RESPONSE":"DECISION CONSEQUENCE",result.why);
+ alertSound(result.good?850:250);
+ drawUI();
+}
+
+function simulate(dt){
+ if(!playing||S.ended||challenge)return;
+ S.time+=dt;
+ moveFlights(dt);
+
+ const nextTurn=Math.floor(S.time/15)+1;
+ if(nextTurn>S.turn)completeTurn();
+
+ const eventIndex=Math.floor(S.time/cfg.event);
+ if(eventIndex>S.lastEvent){
+  S.lastEvent=eventIndex;
+  opponentTurn();
+ }
+
+ if(S.points>=cfg.goal)finish(true);
+ if(S.time>=cfg.limit||S.pressure>=45)finish(false);
+
+ drawUI();
+ checkTutorial();
+}
+
+function finish(success){
+ if(S.ended)return;
+ S.ended=true;playing=false;
+ challenge=null;
+ $("overlay").classList.remove("show");
+ log(success?"MISSION OBJECTIVE ACHIEVED":"MISSION INCOMPLETE",
+ success?"The illustrative mission-point target was reached.":
+ "The mission deadline or pressure limit was reached.");
+ review();
+}
+
+function toggle(){
+ if(S.ended||challenge)return;
+ playing=!playing;
+ log(playing?"MISSION RESUMED":"MISSION PAUSED",
+ playing?"The operational clock and computer opponent are active.":
+ "You can issue orders while the mission clock is paused.");
+ drawUI();
+}
+
+function setSpeed(n){
+ speed=n;
+ log("SIMULATION SPEED","Playback set to "+n+"×.");
+}
+
+function review(){
+ S.reviewed=true;
+ const active=S.sites.filter(x=>x.active).length;
+ const accuracy=S.decisions?
+ Math.round(S.effective/S.decisions*100):0;
+
+ $("dialogTitle").textContent="AFTER-ACTION REVIEW";
+ $("dialogBody").innerHTML=`
+ <p><b>Difficulty:</b> ${level.toUpperCase()}</p>
+ <p><b>Mission points:</b> ${S.points} / ${cfg.goal}</p>
+ <p><b>Operational sites:</b> ${active} / 4</p>
+ <p><b>Airlifts dispatched:</b> ${S.sent}</p>
+ <p><b>Airlifts completed:</b> ${S.delivered}</p>
+ <p><b>Command decisions:</b> ${S.decisions}</p>
+ <p><b>Effective response rate:</b> ${accuracy}%</p>
+ <p><b>Exercise pressure:</b> ${S.pressure}</p>
+ <h3>COMMANDER DEBRIEF</h3>
+ <p>Which locations did you prioritize and why?</p>
+ <p>Did you gather sufficient information before allocating resources?</p>
+ <p>How effectively did you sustain and protect your sites?</p>
+ <p>What would you change during the next mission?</p>
+ <p><small>All scores are illustrative training measures.</small></p>
+ `;
+ $("dialogChoices").replaceChildren();
+ $("decisionTimer").hidden=true;
+ $("closeButton").hidden=false;
+ $("overlay").classList.add("show");
+ checkTutorial();
+}
+
+function closeDialog(){
+ if(challenge)return;
+ $("overlay").classList.remove("show");
+}
+
+function restart(){
+ if(confirm("Restart your Operation Pacific Shield mission?"))reset();
+}
+
+function startTutorial(){
+ reset();
+ playing=false;
+ tutorialStep=0;
+ $("lesson").hidden=false;
+ log("GUIDED TRAINING",
+ "The mission clock is paused so you can learn each command action.");
+ showLesson();
+}
+
+function stopTutorial(){
+ tutorialStep=-1;
+ $("lesson").hidden=true;
+}
+
+function showLesson(){
+ if(tutorialStep<0)return;
+ if(tutorialStep>=tutorials.length){
+  $("lessonTitle").textContent="TUTORIAL COMPLETE";
+  $("lessonText").textContent="You completed the guided training sequence. Continue the mission or try a higher difficulty.";
+  $("nextLesson").disabled=true;
+  return;
+ }
+ const t=tutorials[tutorialStep];
+ $("lessonTitle").textContent="STEP "+(tutorialStep+1)+" / "+tutorials.length+" — "+t[0];
+ $("lessonText").textContent=t[1];
+ $("nextLesson").disabled=!t[2](S);
+}
+
+function checkTutorial(){if(tutorialStep>=0)showLesson()}
+
+function advanceLesson(){
+ if(tutorialStep>=0&&tutorials[tutorialStep]?.[2](S)){
+  tutorialStep++;
+  showLesson();
+ }
+}
+
+function drawUI(){
+ $("clock").textContent=
+ String(Math.floor(S.time/60)).padStart(2,"0")+":"+
+ String(Math.floor(S.time%60)).padStart(2,"0");
+ $("turn").textContent=S.turn;
+ $("mp").textContent=S.points;
+ $("pressure").textContent=S.pressure;
+ $("credits").textContent=S.credits;
+ $("goal").textContent=cfg.goal+" MP";
+ $("difficulty").textContent=level.toUpperCase();
+ $("activeCount").textContent=S.sites.filter(x=>x.active).length+"/4";
+ $("flights").textContent=S.flights.length;
+ $("eventCount").textContent=S.events;
+ $("decisions").textContent=S.decisions;
+ $("status").textContent=S.ended?"FINISHED":playing?"LIVE":"PAUSED";
+ $("play").textContent=playing?"Ⅱ PAUSE MISSION":"▶ RESUME MISSION";
+ $("threatLevel").textContent=S.pressure<10?"LOW":S.pressure<25?"ELEVATED":"HIGH";
+
+ const percent=S.decisions?S.effective/S.decisions:0;
+ let rating="TRAINEE";
+ if(S.decisions>=2&&percent>=.5)rating="MISSION PLANNER";
+ if(S.decisions>=4&&percent>=.7)rating="OPERATIONS LEADER";
+ if(S.decisions>=6&&percent>=.85)rating="EXPERT COMMANDER";
+ $("rating").textContent=rating;
+
+ const s=S.sites[selected];
+
+ $("selection").innerHTML=`
+ <div class="stat"><span>Location</span><b>${s.name}</b></div>
+ <div class="stat"><span>Assessment</span><b>${s.assessed?"COMPLETE":"UNKNOWN"}</b></div>
+ <div class="stat"><span>Supplies</span><b>${s.supplies}</b></div>
+ <div class="stat"><span>Operating</span><b>${s.active?"YES":"NO"}</b></div>
+ <div class="stat"><span>Protection</span><b>${s.protection}</b></div>
+ <div class="stat"><span>Sustainment</span><b>${s.care}</b></div>
+ <div class="stat"><span>Disruption</span><b>${s.disrupted}</b></div>
+ `;
+
+ $("objectives").innerHTML=`
+ <div class="stat"><span>Assessed</span><b>${S.sites.filter(x=>x.assessed).length}/4</b></div>
+ <div class="stat"><span>Operational</span><b>${S.sites.filter(x=>x.active).length}/4</b></div>
+ <div class="stat"><span>Completed airlifts</span><b>${S.delivered}</b></div>
+ <div class="stat"><span>Mission points</span><b>${S.points}/${cfg.goal}</b></div>
+ `;
+
+ $("roleHelp").textContent={
+ CAOC:"CAOC coordinates assessments, mobility and protection.",
+ MOB:"MOB manages site preparation, mobility and sustainment.",
+ CSpOC:"CSpOC provides fictional space and ISR support.",
+ MEDCOM:"MEDCOM focuses on health, welfare and sustainment."
+ }[role];
+
+ document.querySelectorAll("[data-role]").forEach(b=>{
+  b.classList.toggle("active",b.dataset.role===role);
+ });
+}
+
+function resize(){
+ const d=window.devicePixelRatio||1;
+ const w=canvas.clientWidth,h=canvas.clientHeight;
+ if(canvas.width!==Math.round(w*d)||canvas.height!==Math.round(h*d)){
+  canvas.width=Math.round(w*d);
+  canvas.height=Math.round(h*d);
+ }
+ ctx.setTransform(d,0,0,d,0,0);
+ return {w,h};
+}
+
+function hex(x,y,r){
+ ctx.beginPath();
+ for(let i=0;i<6;i++){
+  const a=i*Math.PI/3;
+  if(i===0)ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a));
+  else ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
+ }
+ ctx.closePath();
+}
+
+function draw(){
+ const {w,h}=resize();
+ ctx.fillStyle="#08263b";
+ ctx.fillRect(0,0,w,h);
+ ctx.save();
+ ctx.translate(camera.x,camera.y);
+ ctx.scale(camera.z,camera.z);
+
+ ctx.fillStyle="#1c4b54";
+ ctx.beginPath();
+ ctx.moveTo(0,0);ctx.lineTo(275,0);
+ ctx.lineTo(325,260);ctx.lineTo(200,500);
+ ctx.lineTo(0,560);ctx.closePath();ctx.fill();
+
+ ctx.beginPath();
+ ctx.moveTo(1010,0);ctx.lineTo(1200,0);
+ ctx.lineTo(1200,H);ctx.lineTo(1095,700);
+ ctx.lineTo(960,350);ctx.closePath();ctx.fill();
+
+ ctx.strokeStyle="#47708945";
+ ctx.lineWidth=1;
+ for(let y=0;y<H+70;y+=65){
+  for(let x=0;x<W+100;x+=112){
+   hex(x+(Math.floor(y/65)%2)*56,y,65);
+   ctx.stroke();
+  }
+ }
+
+ ctx.fillStyle="#a7c6d8";
+ ctx.font="12px monospace";
+ ctx.fillText("FICTIONAL PACIFIC EXERCISE GRID",25,28);
+
+ ctx.fillStyle="#64e0ff";
+ ctx.beginPath();
+ ctx.arc(origin.x,origin.y,17,0,Math.PI*2);
+ ctx.fill();
+ ctx.font="bold 12px monospace";
+ ctx.fillText("MOB / AIRLIFT HUB",origin.x-68,origin.y+42);
+
+ S.sites.forEach((s,i)=>{
+  ctx.strokeStyle=s.active?"#79efb9":"#4ccda5";
+  ctx.lineWidth=i===selected?4:2;
+  hex(s.x,s.y,28);ctx.stroke();
+  ctx.fillStyle=s.active?"#2cbd8b":"#164c50";
+  hex(s.x,s.y,17);ctx.fill();
+
+  if(i===selected){
+   ctx.strokeStyle="#ffd58e";
+   ctx.beginPath();
+   ctx.arc(s.x,s.y,42,0,Math.PI*2);
+   ctx.stroke();
+  }
+
+  ctx.fillStyle="#eff8ff";
+  ctx.font="bold 12px monospace";
+  ctx.fillText(s.name,s.x-42,s.y+54);
+
+  if(s.disrupted>0){
+   ctx.fillStyle="#ff7d91";
+   ctx.fillText("! DISRUPTED",s.x-42,s.y-45);
+  }
+ });
+
+ for(const f of S.flights){
+  const dest=S.sites[f.to];
+
+  ctx.strokeStyle="#70dfff88";
+  ctx.setLineDash([8,7]);
+  ctx.beginPath();
+  ctx.moveTo(origin.x,origin.y);
+  ctx.lineTo(dest.x,dest.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.save();
+  ctx.translate(f.x,f.y);
+  ctx.rotate(Math.atan2(dest.y-origin.y,dest.x-origin.x)+Math.PI/2);
+  ctx.fillStyle="#ffd58e";
+  ctx.beginPath();
+  ctx.moveTo(0,-16);ctx.lineTo(6,0);
+  ctx.lineTo(15,9);ctx.lineTo(3,7);
+  ctx.lineTo(0,15);ctx.lineTo(-3,7);
+  ctx.lineTo(-15,9);ctx.lineTo(-6,0);
+  ctx.closePath();ctx.fill();
+  ctx.restore();
+ }
+
+ ctx.restore();
+}
+
+function zoom(n){
+ camera.z=Math.max(.55,Math.min(2.6,camera.z*n));
+}
+
+function centerMap(){
+ camera={x:0,y:0,z:1};
+}
+
+function world(e){
+ const r=canvas.getBoundingClientRect();
+ return {
+  x:(e.clientX-r.left-camera.x)/camera.z,
+  y:(e.clientY-r.top-camera.y)/camera.z
+ };
+}
+
+canvas.addEventListener("pointerdown",e=>{
+ drag={x:e.clientX,y:e.clientY,
+ cx:camera.x,cy:camera.y,moved:false};
+ canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener("pointermove",e=>{
+ if(!drag)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+ if(Math.hypot(dx,dy)>6)drag.moved=true;
+ if(drag.moved){
+  camera.x=drag.cx+dx;
+  camera.y=drag.cy+dy;
+ }
+});
+
+canvas.addEventListener("pointerup",e=>{
+ if(!drag)return;
+ const moved=drag.moved;
+ drag=null;
+ if(moved)return;
+
+ const p=world(e);
+ const i=S.sites.findIndex(s=>
+ Math.hypot(s.x-p.x,s.y-p.y)<50);
+
+ if(i>=0)chooseSite(i);
+});
+
+canvas.addEventListener("wheel",e=>{
+ e.preventDefault();
+ zoom(e.deltaY<0?1.12:.89);
+},{passive:false});
+
+document.querySelectorAll("[data-role]").forEach(b=>{
+ b.onclick=()=>{
+  role=b.dataset.role;
+  log("COMMAND ROLE SELECTED","You are now practicing "+role+" decisions.");
+  drawUI();
+ };
+});
+
+function frame(now){
+ if(!previous)previous=now;
+ const dt=Math.min((now-previous)/1000,.06);
+ previous=now;
+
+ if(challenge){
+  const left=Math.max(0,deadline-now);
+  $("countdown").textContent=
+  "RESPOND WITHIN "+Math.ceil(left/1000)+" SECONDS";
+  $("timerBar").style.width=(left/(cfg.decision*1000)*100)+"%";
+  if(left<=0)resolveChallenge(-1);
+ }
+
+ simulate(dt*speed*3);
+ draw();
+ requestAnimationFrame(frame);
+}
+
+reset();
+
+if(query.get("tutorial")==="1"){
+ startTutorial();
+}
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
