@@ -4,651 +4,813 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AFEX | Airpower Command</title>
+<title>AFEX — Airpower Command Academy</title>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
 <style>
 :root{
-  --bg:#060c16;
-  --panel:#101d30;
-  --border:#29415f;
-  --blue:#48d8f1;
-  --gold:#ffcc72;
-  --green:#62e1ae;
-  --red:#ff7285;
-  --text:#ecf4ff;
-  --muted:#9caec7;
+ --bg:#06101e;--panel:#101f33;--line:#30465e;
+ --blue:#58d9f5;--green:#69eeb1;--red:#fb7889;
+ --gold:#ffd17b;--text:#edf6ff;--muted:#9cb2c9
 }
 *{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
+body{margin:0;background:var(--bg);color:var(--text);
+ font:14px system-ui,Arial,sans-serif}
+button,input,select{
+ font:inherit;border:1px solid #426078;border-radius:6px;
+ background:#172f48;color:var(--text);padding:10px
 }
-button{font:inherit;cursor:pointer}
-header{
-  padding:15px 22px;border-bottom:1px solid var(--border);
-  background:#0d192a;display:flex;align-items:center;
-  justify-content:space-between;gap:12px;flex-wrap:wrap;
-}
-.logo{font-weight:900;letter-spacing:2px;font-size:22px}
-.logo span{color:var(--blue)}
-.sub{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:5px}
-.badge{
-  border:1px solid var(--blue);border-radius:6px;padding:9px 12px;
-  color:var(--blue);font-size:12px
-}
-nav{
-  display:flex;gap:7px;padding:12px 18px;overflow:auto;
-  background:#0a1422;border-bottom:1px solid var(--border)
-}
-nav button,.btn{
-  border:1px solid var(--border);background:#15263e;
-  color:var(--text);padding:11px 15px;border-radius:6px
-}
-nav button.active,.btn.primary{
-  background:var(--blue);color:#04121d;font-weight:bold
-}
-.btn:hover,nav button:hover{border-color:var(--blue)}
-.btn:disabled{opacity:.35;cursor:not-allowed}
-main{max-width:1500px;margin:auto;padding:18px}
-.page{display:none}.page.active{display:block}
-h1{font-size:26px;margin:0 0 10px}
-h2{font-size:18px;margin:0 0 12px;color:var(--blue)}
-p{line-height:1.6}
-.muted{color:var(--muted)}
-.grid{display:grid;grid-template-columns:1.6fr 1fr;gap:15px}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0}
-.card,.panel{
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:10px;padding:17px
-}
-.card .value{font-size:28px;font-weight:900;color:var(--blue);margin:8px 0}
-.card .label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
-.panel{margin-bottom:15px}
-.map{
-  height:420px;position:relative;overflow:hidden;border-radius:9px;
-  background:
-    linear-gradient(#2a476b35 1px,transparent 1px),
-    linear-gradient(90deg,#2a476b35 1px,transparent 1px),
-    radial-gradient(ellipse at 35% 45%,#17395a,#081526 70%);
-  background-size:42px 42px,42px 42px,100% 100%;
-  border:1px solid #315574;
-}
-.map::before{
-  content:"";position:absolute;inset:0;
-  background:repeating-linear-gradient(0deg,transparent 0 4px,#ffffff03 5px 6px);
-  pointer-events:none
-}
-.mapTitle{position:absolute;left:14px;top:12px;font-size:12px;color:var(--blue);letter-spacing:2px}
-.node{
-  position:absolute;border:1px solid var(--blue);border-radius:8px;
-  background:#102a43dd;color:#fff;padding:8px 11px;
-  font-size:11px;transform:translate(-50%,-50%);
-  text-align:center;z-index:2
-}
-.node:hover{background:#255277}
-.node.red{border-color:var(--red);color:var(--red)}
-.node.selected{box-shadow:0 0 0 3px #48d8f155}
-.aircraft{
-  position:absolute;left:12%;top:40%;font-size:30px;
-  color:var(--blue);z-index:3;pointer-events:none;
-  filter:drop-shadow(0 0 8px #48d8f1);
-  animation:fly 8s linear infinite alternate
-}
-@keyframes fly{
-  0%{transform:translate(0,0) rotate(15deg)}
-  100%{transform:translate(250px,-100px) rotate(15deg)}
-}
-.line{
-  position:absolute;border-top:2px dashed #48d8f177;
-  transform-origin:left center;pointer-events:none
-}
-.status{color:var(--green);font-size:12px}
-.control{
-  padding:12px;background:#0b1728;border:1px solid var(--border);
-  border-radius:8px;margin:9px 0
-}
-.control label{display:block;margin-bottom:8px;color:var(--muted);font-size:12px}
-select,input{
-  background:#14263e;color:#fff;border:1px solid var(--border);
-  border-radius:5px;padding:10px;width:100%
-}
-.options{display:grid;gap:9px;margin:15px 0}
-.option{
-  text-align:left;background:#14243a;color:#fff;border:1px solid var(--border);
-  border-radius:8px;padding:13px
-}
-.option:hover{border-color:var(--blue)}
-.option.correct{background:#153d35;border-color:var(--green)}
-.option.wrong{background:#4a2030;border-color:var(--red)}
-#feedback,#quizFeedback{min-height:55px;line-height:1.5}
-.log{max-height:300px;overflow:auto;font-size:12px}
-.log div{padding:9px;border-bottom:1px solid #263b56;color:#b6cae0}
-.sectionTitle{font-size:12px;letter-spacing:2px;color:var(--gold);margin-bottom:12px}
-.progress{height:9px;background:#283b53;border-radius:8px;overflow:hidden}
-.progress div{height:100%;background:var(--blue);width:0%;transition:width .3s}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.step{background:#0c1b2e;border:1px solid var(--border);border-radius:8px;padding:15px}
-.step strong{color:var(--gold)}
-#toast{
-  position:fixed;bottom:20px;right:20px;background:#133b40;
-  border:1px solid var(--blue);padding:13px;border-radius:8px;
-  display:none;z-index:10;max-width:320px
-}
-@media(max-width:850px){
-  .grid,.steps{grid-template-columns:1fr}
-  .cards{grid-template-columns:repeat(2,1fr)}
-  .map{height:350px}
-  .aircraft{animation:none}
-}
+button{cursor:pointer}
+button:hover{border-color:var(--blue)}
+button:disabled{opacity:.4;cursor:not-allowed}
+input,select{width:100%}
+.primary{background:#117e9b;border-color:var(--blue)}
+header{padding:16px 20px;background:#0b192b;
+ border-bottom:1px solid var(--line);display:flex;
+ justify-content:space-between;gap:10px;flex-wrap:wrap}
+header h1{margin:0;font-size:22px;letter-spacing:2px}
+header h1 span{color:var(--blue)}
+small,.muted{color:var(--muted)}
+nav{display:flex;gap:7px;padding:11px;overflow:auto;
+ background:#091525}
+nav button{white-space:nowrap}
+nav button.active{background:#156c85;border-color:var(--blue)}
+.page{display:none;padding:16px;max-width:1550px;margin:auto}
+.page.active{display:block}
+h2{color:var(--blue)}
+h3{font-size:13px;color:var(--gold);letter-spacing:1px}
+.panel,.card{background:var(--panel);border:1px solid var(--line);
+ border-radius:9px;padding:15px;margin-bottom:12px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card p{line-height:1.7}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr) 250px;gap:12px}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.row button{flex:1}
+.full{width:100%;margin:5px 0;text-align:left}
+.stat{padding:9px 0;border-bottom:1px solid var(--line);
+ display:flex;justify-content:space-between;gap:9px}
+.stat strong{color:var(--gold)}
+#map{display:block;width:100%;height:530px;
+ background:#08283c;border:1px solid #416680;border-radius:7px;
+ touch-action:none;cursor:crosshair}
+#mini{width:100%;height:140px;background:#071a2c;cursor:pointer}
+.notice{padding:12px;margin:12px 0;background:#16354a;
+ border-left:3px solid var(--blue);line-height:1.6}
+.log{max-height:260px;overflow:auto}
+.log p{padding:9px;border-bottom:1px solid #29465b;margin:0;line-height:1.6}
+.modal-bg{display:none;position:fixed;inset:0;z-index:20;
+ background:#010711e8;align-items:center;justify-content:center;padding:15px}
+.modal-bg.open{display:flex}
+.modal{width:min(700px,100%);max-height:90vh;overflow:auto;
+ padding:25px;background:#12253c;border:1px solid #497e9d;
+ border-radius:12px;line-height:1.7}
+.modal button{margin-top:10px}
+#tutorialProgress{height:9px;background:#24425b;border-radius:8px}
+#tutorialProgress div{height:100%;width:0;background:var(--green)}
+footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
+@media(max-width:1100px){.layout{grid-template-columns:210px minmax(0,1fr)}
+ .right{grid-column:1/-1}}
+@media(max-width:700px){.layout,.cards{display:block}#map{height:390px}}
 </style>
 </head>
 <body>
-
 <header>
  <div>
-  <div class="logo">AFEX <span>// AIRPOWER COMMAND</span></div>
-  <div class="sub">INTERACTIVE AIR FORCE EMPLOYMENT TRAINING</div>
+  <h1>AFEX <span>// AIRPOWER COMMAND</span></h1>
+  <small>INTERACTIVE AIRPOWER EMPLOYMENT TRAINING</small>
  </div>
- <div class="badge">TRAINING SIMULATOR • LOCAL SAVE</div>
+ <div class="row">
+  <button id="modeLabel">BEGINNER</button>
+  <button id="clock">T+ 00:00</button>
+  <button id="roomLabel">SOLO</button>
+ </div>
 </header>
-
 <nav>
- <button class="active" onclick="showPage('dashboard',this)">COMMAND CENTER</button>
- <button onclick="showPage('tutorial',this)">LEARN AFEX</button>
- <button onclick="showPage('mission',this)">MISSION SIMULATOR</button>
- <button onclick="showPage('quiz',this)">DECISION DRILLS</button>
- <button onclick="showPage('review',this)">AFTER-ACTION REVIEW</button>
+ <button class="active" onclick="show('home',this)">MISSION HUB</button>
+ <button onclick="show('game',this)">FLIGHT SIMULATOR</button>
+ <button onclick="show('tutorial',this)">GUIDED TUTORIAL</button>
+ <button onclick="show('team',this)">TEAM PLAY</button>
+ <button onclick="show('review',this)">AFTER-ACTION REVIEW</button>
 </nav>
 
-<main>
-<section id="dashboard" class="page active">
- <h1>Mission Command Dashboard</h1>
- <p class="muted">Welcome, Mission Commander. Prepare your team, plan the package, and complete your training objectives.</p>
+<section id="home" class="page active">
+ <h2>Choose Your AFEX Training Experience</h2>
+ <p class="muted">Practice controlling aircraft against computer threats, learn mission planning, or coordinate with other players.</p>
  <div class="cards">
-  <div class="card"><div class="label">Mission Score</div><div class="value" id="scoreA">0</div></div>
-  <div class="card"><div class="label">Current Turn</div><div class="value" id="turnA">1 / 6</div></div>
-  <div class="card"><div class="label">Readiness</div><div class="value" id="readyA">70%</div></div>
-  <div class="card"><div class="label">Quiz Accuracy</div><div class="value" id="quizA">0%</div></div>
+  <div class="card">
+   <h2>🟢 Beginner</h2>
+   <p>Slower threats, easier mission completion, detailed hints and explanations.</p>
+   <button class="primary" onclick="startGame('beginner')">PLAY BEGINNER</button>
+  </div>
+  <div class="card">
+   <h2>🔵 Intermediate</h2>
+   <p>Faster enemy aircraft, more difficult decisions and reduced assistance.</p>
+   <button class="primary" onclick="startGame('intermediate')">PLAY INTERMEDIATE</button>
+  </div>
+  <div class="card">
+   <h2>🔴 Expert</h2>
+   <p>Aggressive computer opposition, tighter mission deadlines and fuel management.</p>
+   <button class="primary" onclick="startGame('expert')">PLAY EXPERT</button>
+  </div>
  </div>
- <div class="grid">
-  <div class="panel">
-   <h2>Operations Visualization</h2>
-   <div class="map" id="mainMap">
-    <div class="mapTitle">TRAINING OPERATIONS DISPLAY // FICTIONAL</div>
-    <div class="line" style="left:24%;top:34%;width:52%;transform:rotate(15deg)"></div>
-    <button class="node" style="left:24%;top:34%" onclick="selectNode('Main Operating Base')">MAIN BASE<br>● READY</button>
-    <button class="node" style="left:55%;top:20%" onclick="selectNode('Recon Sector')">RECON<br>SECTOR</button>
-    <button class="node" style="left:72%;top:54%" onclick="selectNode('Mission Area')">MISSION<br>AREA</button>
-    <button class="node red" style="left:83%;top:26%" onclick="selectNode('Threat Sector')">THREAT<br>SECTOR</button>
-    <span class="aircraft">✈</span>
-   </div>
-   <p id="mapInfo" class="muted">Select a location on the map to inspect it.</p>
+ <div class="cards">
+  <div class="card">
+   <h2>Guided Simulator</h2>
+   <p>Follow an interactive tutorial that teaches each step of a mission.</p>
+   <button onclick="beginTutorial()">START TUTORIAL</button>
   </div>
-  <div>
-   <div class="panel">
-    <div class="sectionTitle">COMMANDER'S INTENT</div>
-    <p>Develop an airpower employment plan that supports the assigned mission, protects personnel, and coordinates the force.</p>
-    <button class="btn primary" onclick="navigate('mission')">START MISSION →</button>
-   </div>
-   <div class="panel">
-    <div class="sectionTitle">STATUS REPORT</div>
-    <p class="status">● SIMULATION ONLINE</p>
-    <p class="muted">This simplified training environment is designed to practice decisions before your actual exercise.</p>
-    <div id="dashboardLog" class="log"></div>
-   </div>
+  <div class="card">
+   <h2>Multiplayer Training</h2>
+   <p>Host a shared mission or join another player using a room code.</p>
+   <button onclick="openPage('team')">CREATE / JOIN GAME</button>
   </div>
+  <div class="card">
+   <h2>Training Objective</h2>
+   <p>Use reconnaissance, protection and air mobility to complete a fictional noncombatant evacuation.</p>
+  </div>
+ </div>
+</section>
+
+<section id="game" class="page">
+ <div class="layout">
+  <aside>
+   <div class="panel">
+    <h3>MISSION BRIEF</h3>
+    <p>Evacuate three groups from the designated site.</p>
+    <p class="muted">Gather intelligence, escort the transport and protect the evacuation corridor.</p>
+    <div id="objectives"></div>
+    <button class="primary full" onclick="openHelp()">HOW TO PLAY</button>
+   </div>
+   <div class="panel">
+    <h3>BLUE FORCE FLIGHTS</h3>
+    <div id="flightList"></div>
+   </div>
+   <div class="panel">
+    <h3>MISSION CONTROL</h3>
+    <div class="row">
+     <button class="primary" id="playButton" onclick="toggle()">▶ START</button>
+     <button onclick="setSpeed(1)">1×</button>
+     <button onclick="setSpeed(2)">2×</button>
+    </div>
+    <button class="full" onclick="restart()">RESTART MISSION</button>
+   </div>
+  </aside>
+
+  <main>
+   <div class="panel">
+    <div class="row">
+     <h3 style="flex:3">LIVE OPERATIONS CHART</h3>
+     <button onclick="zoom(1.2)">＋</button>
+     <button onclick="zoom(.8)">－</button>
+     <button onclick="resetView()">CENTER</button>
+    </div>
+    <canvas id="map"></canvas>
+    <div class="notice" id="explanation">
+     Select an aircraft to begin your mission.
+    </div>
+    <div class="row">
+     <button id="evacStatus">EVACUATED 0 / 3</button>
+     <button id="threatStatus">THREATS ACTIVE</button>
+    </div>
+   </div>
+   <div class="panel">
+    <h3>MISSION EVENTS — WHAT HAPPENED AND WHY</h3>
+    <div id="eventLog" class="log"></div>
+   </div>
+  </main>
+
+  <aside class="right">
+   <div class="panel">
+    <h3>SELECTED AIRCRAFT</h3>
+    <div id="flightInfo"></div>
+    <h3>ASSIGN ORDERS</h3>
+    <button class="full" onclick="order('RECON')">◉ RECON — Gather information</button>
+    <button class="full" onclick="order('ESCORT')">◇ ESCORT — Protect transport</button>
+    <button class="full" onclick="order('CAP')">◎ CAP — Air patrol</button>
+    <button class="full" onclick="order('EVAC')">⬡ EVAC — Evacuation</button>
+    <button class="full" onclick="order('RTB')">↩ RETURN TO BASE</button>
+    <p class="muted">For RECON and CAP, click a destination on the map. Other orders begin automatically.</p>
+   </div>
+   <div class="panel">
+    <h3>JUMP CHART</h3>
+    <canvas id="mini"></canvas>
+    <p class="muted">Click the mini-map to move the main view.</p>
+   </div>
+  </aside>
  </div>
 </section>
 
 <section id="tutorial" class="page">
- <h1>AFEX Training Academy</h1>
- <p class="muted">Learn the basic concepts before entering the mission simulator.</p>
- <div class="steps">
-  <div class="step">
-   <strong>01 // UNDERSTAND</strong>
-   <h2>What is AFEX?</h2>
-   <p>The Air Force Employment Exercise introduces airpower planning, mission coordination, and the decisions required to employ forces.</p>
-  </div>
-  <div class="step">
-   <strong>02 // PLAN</strong>
-   <h2>Build a Mission</h2>
-   <p>Understand the assigned task, available resources, objectives, and limitations before deciding on a course of action.</p>
-  </div>
-  <div class="step">
-   <strong>03 // PACKAGE</strong>
-   <h2>Force Packaging</h2>
-   <p>Combine complementary capabilities, such as reconnaissance, protection, and support, to accomplish the objective.</p>
-  </div>
-  <div class="step">
-   <strong>04 // COORDINATE</strong>
-   <h2>Work as a Team</h2>
-   <p>Communicate between roles, confirm responsibilities, and maintain a common understanding of the mission.</p>
-  </div>
-  <div class="step">
-   <strong>05 // EXECUTE</strong>
-   <h2>Monitor the Mission</h2>
-   <p>Observe changes, review new information, and adjust your plan when conditions change.</p>
-  </div>
-  <div class="step">
-   <strong>06 // REVIEW</strong>
-   <h2>After-Action Review</h2>
-   <p>Evaluate decisions, identify lessons learned, and explain what could be improved.</p>
-  </div>
- </div>
- <div class="panel" style="margin-top:16px">
-  <h2>Quick Memory Guide</h2>
-  <p><b style="color:var(--gold)">WHAT:</b> What does the mission require?</p>
-  <p><b style="color:var(--gold)">WHO:</b> Who and what capabilities are available?</p>
-  <p><b style="color:var(--gold)">HOW:</b> How will the team accomplish its task?</p>
-  <p><b style="color:var(--gold)">WHAT IF:</b> What happens when the situation changes?</p>
-  <button class="btn primary" onclick="navigate('quiz')">PRACTICE DECISIONS →</button>
+ <div class="panel" style="max-width:850px;margin:auto">
+  <h2>AFEX — Step-by-Step Training Simulator</h2>
+  <h3 id="tutNumber">STEP 1</h3>
+  <h2 id="tutTitle">Getting started</h2>
+  <p id="tutText"></p>
+  <div id="tutorialProgress"><div id="tutorialBar"></div></div>
+  <p class="muted">Perform each action on the live flight simulator. Your next step unlocks automatically.</p>
+  <button class="primary" onclick="beginTutorial()">RESTART TUTORIAL</button>
+  <button onclick="openPage('game')">GO TO GAME BOARD</button>
  </div>
 </section>
 
-<section id="mission" class="page">
- <h1>Interactive Mission Simulator</h1>
- <p class="muted">Six training turns. Select your support package, assess the situation, and make a command decision.</p>
+<section id="team" class="page">
+ <h2>AFEX Multiplayer Lobby</h2>
+ <div class="notice">One member hosts the simulation and shares a room code. Other members join and issue flight orders. Live multiplayer requires internet access and a working peer-to-peer connection. The host controls the mission clock.</div>
  <div class="cards">
-  <div class="card"><div class="label">Turn</div><div class="value" id="turnB">1</div></div>
-  <div class="card"><div class="label">Mission Points</div><div class="value" id="scoreB">0</div></div>
-  <div class="card"><div class="label">Readiness</div><div class="value" id="readyB">70%</div></div>
-  <div class="card"><div class="label">Resources</div><div class="value" id="resourcesB">100</div></div>
- </div>
- <div class="grid">
-  <div class="panel">
-   <div class="sectionTitle">SITUATION DISPLAY</div>
-   <h2 id="missionTitle">Turn 1 — Mission Preparation</h2>
-   <p id="missionText"></p>
-   <div class="map">
-    <div class="mapTitle">MISSION OPERATIONS BOARD</div>
-    <button class="node" style="left:18%;top:50%" onclick="selectNode('Departure Base')">DEPARTURE<br>BASE</button>
-    <button class="node" style="left:45%;top:23%" onclick="selectNode('Support Area')">SUPPORT<br>AREA</button>
-    <button class="node" style="left:74%;top:47%" onclick="selectNode('Objective Area')">OBJECTIVE<br>AREA</button>
-    <button class="node red" style="left:60%;top:73%" onclick="selectNode('Potential Threat')">POTENTIAL<br>THREAT</button>
-    <span class="aircraft">✈</span>
-   </div>
+  <div class="card">
+   <h2>Host a Mission</h2>
+   <p>Enter your name and create a new game.</p>
+   <input id="hostName" placeholder="Mission Commander">
+   <button class="primary full" onclick="hostRoom()">CREATE GAME</button>
+   <div id="hostCode"></div>
   </div>
-  <div class="panel">
-   <div class="sectionTitle">MISSION CONTROL</div>
-   <div class="control">
-    <label for="package">SELECT SUPPORT PACKAGE</label>
-    <select id="package">
-     <option value="balanced">Balanced Package — Cost 20</option>
-     <option value="recon">Reconnaissance Priority — Cost 15</option>
-     <option value="escort">Protection Priority — Cost 25</option>
-    </select>
-   </div>
-   <p id="decisionPrompt"></p>
-   <div id="decisionOptions" class="options"></div>
-   <div id="feedback"></div>
-   <button id="nextTurn" class="btn primary" onclick="advanceTurn()" disabled>NEXT TURN →</button>
+  <div class="card">
+   <h2>Join a Mission</h2>
+   <input id="playerName" placeholder="Your name">
+   <input id="joinCode" placeholder="Enter room code" style="margin-top:8px">
+   <button class="primary full" onclick="joinRoom()">JOIN GAME</button>
   </div>
- </div>
- <div class="panel">
-  <h2>Mission Event Log</h2>
-  <div id="eventLog" class="log"></div>
- </div>
-</section>
-
-<section id="quiz" class="page">
- <h1>Decision Drills</h1>
- <p class="muted">Choose the BEST answer. The explanation appears after you answer.</p>
- <div class="panel" style="max-width:850px">
-  <div class="sectionTitle" id="quizNumber">QUESTION 1</div>
-  <div class="progress"><div id="quizProgress"></div></div>
-  <h2 id="quizQuestion" style="margin-top:22px"></h2>
-  <div class="options" id="quizOptions"></div>
-  <div id="quizFeedback"></div>
-  <button class="btn primary" id="quizNext" onclick="nextQuestion()" disabled>NEXT QUESTION →</button>
-  <button class="btn" onclick="restartQuiz()">RESTART QUIZ</button>
+  <div class="card">
+   <h2>Room Status</h2>
+   <p id="teamStatus">Not connected.</p>
+   <button onclick="leaveRoom()">LEAVE ROOM</button>
+  </div>
  </div>
 </section>
 
 <section id="review" class="page">
- <h1>After-Action Review</h1>
- <p class="muted">Review your training performance and identify opportunities to improve.</p>
- <div class="cards">
-  <div class="card"><div class="label">Mission Points</div><div class="value" id="finalScore">0</div></div>
-  <div class="card"><div class="label">Turns Completed</div><div class="value" id="finalTurns">0</div></div>
-  <div class="card"><div class="label">Decisions Correct</div><div class="value" id="finalCorrect">0</div></div>
-  <div class="card"><div class="label">Readiness</div><div class="value" id="finalReady">70%</div></div>
- </div>
+ <h2>AFEX — After-Action Review</h2>
+ <div class="cards" id="results"></div>
  <div class="panel">
-  <h2>Commander Assessment</h2>
-  <p id="reviewText"></p>
-  <div class="sectionTitle">REFLECTION QUESTIONS</div>
-  <p>1. Did the plan directly support the objective?</p>
-  <p>2. Were available capabilities properly coordinated?</p>
-  <p>3. Did you adapt when new information appeared?</p>
-  <p>4. What would you improve during the next exercise?</p>
-  <button class="btn primary" onclick="resetMission()">RESTART MISSION</button>
+  <h3>MISSION DEBRIEF</h3>
+  <p>Did reconnaissance reduce uncertainty?</p>
+  <p>Was the transport protected from opposing aircraft?</p>
+  <p>Were your flight orders coordinated with the mission?</p>
+  <p>What should you change next time?</p>
+  <button class="primary" onclick="restart()">REPLAY MISSION</button>
  </div>
 </section>
-</main>
 
-<div id="toast"></div>
+<footer>
+ Unofficial educational AFEX practice simulator.
+ Simplified fictional aircraft behavior and scoring.
+</footer>
+
+<div id="modalBg" class="modal-bg">
+ <div class="modal">
+  <h2 id="modalTitle"></h2>
+  <div id="modalBody"></div>
+  <button class="primary" onclick="closeModal()">CONTINUE</button>
+ </div>
+</div>
 
 <script>
 "use strict";
+const $=id=>document.getElementById(id);
+const W=1200,H=800;
+const base={x:170,y:610},site={x:945,y:245};
+const map=$("map"),ctx=map.getContext("2d");
+const mini=$("mini"),mc=mini.getContext("2d");
 
-// Fictional, simplified educational scenarios.
-// These are not the official AFEX game engine or scoring rules.
+let state,selected=0,pending="",difficulty="beginner";
+let speed=1,last=performance.now(),tutorialStep=-1;
+let view={x:0,y:0,z:1};
+let peer=null,connections=[],host=false,joined=false;
+let lastBroadcast=0;
 
-const missions=[
- {
-  title:"Mission Preparation",
-  text:"Your team receives a training task. Several capabilities are available, but responsibilities have not yet been confirmed.",
-  prompt:"What should the Mission Commander do first?",
-  options:[
-   "Launch immediately and resolve confusion later",
-   "Clarify the objective, roles, and available capabilities",
-   "Assign every aircraft to the same task",
-   "Wait until the mission is almost complete"
-  ],
-  answer:1,
-  why:"A shared understanding of the objective and responsibilities helps the team build an effective plan."
- },
- {
-  title:"Information Gap",
-  text:"The team lacks current information about conditions in the objective area.",
-  prompt:"Which action BEST supports informed planning?",
-  options:[
-   "Ignore the information gap",
-   "Commit every resource immediately",
-   "Prioritize reconnaissance and share findings",
-   "Stop communicating with supporting teams"
-  ],
-  answer:2,
-  why:"Reconnaissance helps reduce uncertainty before important decisions."
- },
- {
-  title:"Force Packaging",
-  text:"A mission requires several complementary capabilities, but each available resource has limitations.",
-  prompt:"What is the BEST planning approach?",
-  options:[
-   "Select capabilities that complement the mission requirements",
-   "Choose aircraft only by appearance",
-   "Avoid coordinating supporting capabilities",
-   "Assign all personnel to one unrelated task"
-  ],
-  answer:0,
-  why:"A force package should be built around the mission and the complementary effects needed."
- },
- {
-  title:"Coordination Challenge",
-  text:"Two teams are working from different assumptions about the same mission timeline.",
-  prompt:"How should the commander respond?",
-  options:[
-   "Allow both teams to follow conflicting timelines",
-   "Cancel the mission without reviewing the issue",
-   "Only inform one team",
-   "Confirm the common timeline and communicate changes"
-  ],
-  answer:3,
-  why:"Coordinating information across teams helps prevent avoidable mistakes."
- },
- {
-  title:"Changing Conditions",
-  text:"New information changes the assumptions used during the original plan.",
-  prompt:"What should leadership do?",
-  options:[
-   "Continue without reviewing the information",
-   "Reassess the plan and adjust the course of action",
-   "Ignore the report until the mission ends",
-   "Remove all supporting capabilities automatically"
-  ],
-  answer:1,
-  why:"Effective execution includes reassessment when conditions or assumptions change."
- },
- {
-  title:"Mission Review",
-  text:"The team completes its final training activity. Some tasks succeeded, while others revealed coordination gaps.",
-  prompt:"What is the BEST final action?",
-  options:[
-   "Finish without recording any lessons",
-   "Focus only on the highest score",
-   "Conduct an after-action review and identify improvements",
-   "Delete all team observations"
-  ],
-  answer:2,
-  why:"An after-action review helps the team understand performance and improve future execution."
- }
+const levels={
+ beginner:{enemySpeed:12,damage:5,deadline:750},
+ intermediate:{enemySpeed:19,damage:12,deadline:570},
+ expert:{enemySpeed:26,damage:20,deadline:430}
+};
+
+const lessons=[
+ ["Select Reconnaissance","Select HAWK 02, the RQ-4 reconnaissance aircraft. Reconnaissance helps collect information before committing other aircraft.","selectRecon"],
+ ["Assign Recon","Choose RECON and then click near the green evacuation site. This sets the aircraft's destination.","recon"],
+ ["Assign Protection","Select VIPER 01, the F-22 fighter. Choose ESCORT to protect the transport.","escort"],
+ ["Start Evacuation","Select LIFT 03, the C-17 transport, and choose EVAC. It will move between the site and home base.","evac"],
+ ["Run Simulation","Press START. The aircraft and computer opponents will begin moving.","start"],
+ ["Pause Simulation","Press PAUSE. Pausing lets you examine the situation before continuing.","pause"],
+ ["Complete Mission","Resume the mission and monitor the evacuation progress.","complete"],
+ ["Review Results","Open AFTER-ACTION REVIEW to examine your performance.","review"]
 ];
 
-const questions=[
- ["What is the primary purpose of force packaging?",[
- "Combine complementary capabilities to support a mission",
- "Use every available aircraft regardless of purpose",
- "Avoid coordination between teams",
- "Assign all missions to one capability"],0,
- "Force packaging organizes complementary capabilities around mission requirements."],
- ["What does SMART help teams develop?",[
- "Random flight schedules","Specific and measurable objectives",
- "Aircraft identification numbers","Unrelated task lists"],1,
- "SMART objectives are specific, measurable, attainable, realistic, and timely."],
- ["What is the BEST response to an important information gap?",[
- "Assume the missing information","Ignore uncertainty",
- "Gather and evaluate relevant information","Choose the fastest option"],2,
- "Good planning identifies and reduces important uncertainty."],
- ["Which behavior demonstrates effective mission coordination?",[
- "Keeping all changes secret","Changing tasks without notification",
- "Avoiding staff input","Sharing relevant updates with all affected teams"],3,
- "Shared information supports unity of effort."],
- ["What is the main purpose of an after-action review?",[
- "Identify strengths, weaknesses, and lessons learned",
- "Assign blame without evidence","Ignore the outcome",
- "Repeat every action without analysis"],0,
- "An AAR supports learning and continuous improvement."],
- ["Which statement BEST describes operational flexibility?",[
- "Never change a plan","Adapt when mission conditions change",
- "Ignore new information","Avoid planning for alternatives"],1,
- "Flexibility allows teams to respond to changing conditions."],
- ["Which should guide the choice of a mission package?",[
- "The greatest number of aircraft","The easiest option for one person",
- "The assigned objective and required effects","A random selection"],2,
- "Mission requirements determine which capabilities are most useful."],
- ["What should a commander do when teams misunderstand the mission?",[
- "Continue despite the disagreement","Ignore the team",
- "Assign more unrelated tasks","Clarify the mission and confirm understanding"],3,
- "Clarifying intent and responsibilities creates a common plan."]
-];
-
-const KEY="afex_command_v1";
-
-function fresh(){
- return {turn:0,score:0,readiness:70,resources:100,
-  correct:0,answered:false,finished:false,
-  quizIndex:0,quizCorrect:0,quizAnswered:false,
-  quizTotal:0,events:["Training simulation initialized."]};
+function fresh(mode){
+ difficulty=mode;
+ selected=0;pending="";speed=1;
+ state={
+  time:0,running:false,over:false,evac:0,recon:false,
+  planes:[
+   {id:"VIPER 01",type:"F-22",role:"fighter",x:190,y:570,
+    hp:100,fuel:100,v:48,order:"HOLD",target:null},
+   {id:"HAWK 02",type:"RQ-4",role:"recon",x:185,y:640,
+    hp:100,fuel:100,v:40,order:"HOLD",target:null},
+   {id:"LIFT 03",type:"C-17",role:"transport",x:160,y:610,
+    hp:100,fuel:100,v:35,order:"HOLD",target:null,
+    cargo:0,phase:""}
+  ],
+  enemies:[
+   {x:1080,y:90,hp:100},
+   {x:1110,y:495,hp:100}
+  ],
+  events:[]
+ };
+ $("eventLog").innerHTML="";
+ event("MISSION READY","Your aircraft are available. Assign reconnaissance, escort and evacuation missions before advancing time.");
+ render();
 }
-let state=fresh();
-try{
- const saved=JSON.parse(localStorage.getItem(KEY));
- if(saved&&typeof saved.turn==="number")state={...fresh(),...saved};
-}catch(e){}
-
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
-function el(id){return document.getElementById(id);}
-function clamp(x,min,max){return Math.max(min,Math.min(max,x));}
-function toast(message){
- const t=el("toast");t.textContent=message;t.style.display="block";
- clearTimeout(window.toastTimer);
- window.toastTimer=setTimeout(()=>t.style.display="none",2600);
+function startGame(mode){
+ leaveRoom();
+ tutorialStep=-1;
+ fresh(mode);
+ openPage("game");
+ event("DIFFICULTY SELECTED",mode.toUpperCase()+" computer opponent activated.");
 }
-function showPage(id,button){
- document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
- el(id).classList.add("active");
- document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+function show(id,button){
+ document.querySelectorAll(".page").forEach(e=>e.classList.remove("active"));
+ $(id).classList.add("active");
+ document.querySelectorAll("nav button").forEach(e=>e.classList.remove("active"));
  if(button)button.classList.add("active");
- update();
 }
-function navigate(id){
- const button=[...document.querySelectorAll("nav button")]
-  .find(b=>b.getAttribute("onclick").includes("'"+id+"'"));
- showPage(id,button);
- window.scrollTo(0,0);
+function openPage(id){
+ const b=[...document.querySelectorAll("nav button")]
+ .find(x=>x.getAttribute("onclick").includes("'"+id+"'"));
+ show(id,b);
+ if(id==="review")renderReview();
 }
-function selectNode(name){
- el("mapInfo").textContent="SELECTED LOCATION: "+name;
- toast("Map location selected: "+name);
+function event(title,why){
+ const message={time:Math.floor(state.time),title,why};
+ state.events.unshift(message);
+ state.events=state.events.slice(0,60);
+ $("explanation").textContent=title+" — "+why;
+ renderEvents();
 }
-function addEvent(message){
- state.events.unshift("TURN "+Math.min(state.turn+1,6)+" • "+message);
- state.events=state.events.slice(0,30);
+function renderEvents(){
+ $("eventLog").innerHTML="";
+ state.events.forEach(e=>{
+  const p=document.createElement("p");
+  p.textContent="T+"+e.time+" | "+e.title+" — "+e.why;
+  $("eventLog").appendChild(p);
+ });
 }
-function update(){
- el("scoreA").textContent=state.score;
- el("turnA").textContent=Math.min(state.turn+1,6)+" / 6";
- el("readyA").textContent=state.readiness+"%";
- el("quizA").textContent=state.quizTotal?
- Math.round(state.quizCorrect/state.quizTotal*100)+"%":"0%";
- el("turnB").textContent=Math.min(state.turn+1,6);
- el("scoreB").textContent=state.score;
- el("readyB").textContent=state.readiness+"%";
- el("resourcesB").textContent=state.resources;
- el("dashboardLog").innerHTML="";
- el("eventLog").innerHTML="";
- for(const event of state.events){
-  for(const id of ["dashboardLog","eventLog"]){
-   const div=document.createElement("div");
-   div.textContent=event;el(id).appendChild(div);
-  }
- }
- renderMission();
- renderQuiz();
- renderReview();
- save();
+function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function selectPlane(i){
+ selected=i;
+ event("FLIGHT SELECTED",state.planes[i].id+" is selected for mission tasking.");
+ if(tutorialStep===0&&i===1)advanceTutorial();
+ render();
 }
-function renderMission(){
- if(state.finished){
-  el("missionTitle").textContent="SIMULATION COMPLETE";
-  el("missionText").textContent="All training turns are finished. Open the after-action review.";
-  el("decisionPrompt").textContent="Mission complete.";
-  el("decisionOptions").innerHTML="";
-  el("feedback").textContent="Review your results or restart the mission.";
-  el("nextTurn").disabled=true;
-  el("nextTurn").textContent="MISSION COMPLETE";
+function permitted(p,o){
+ return {
+  fighter:["ESCORT","CAP","RTB"],
+  recon:["RECON","RTB"],
+  transport:["EVAC","RTB"]
+ }[p.role].includes(o);
+}
+function order(o){
+ if(joined){
+  send({type:"order",index:selected,order:o});
   return;
  }
- const m=missions[state.turn];
- el("missionTitle").textContent="TURN "+(state.turn+1)+" — "+m.title;
- el("missionText").textContent=m.text;
- el("decisionPrompt").textContent=m.prompt;
- const box=el("decisionOptions");
- box.innerHTML="";
- m.options.forEach((option,index)=>{
-  const b=document.createElement("button");
-  b.className="option";
-  b.textContent=String.fromCharCode(65+index)+". "+option;
-  b.disabled=state.answered;
-  if(state.answered&&index===m.answer)b.classList.add("correct");
-  if(state.answered&&index===state.lastAnswer&&index!==m.answer)b.classList.add("wrong");
-  b.onclick=()=>answerMission(index);
-  box.appendChild(b);
- });
- el("feedback").textContent=state.answered?
- state.lastCorrect?"CORRECT — "+m.why:"REVIEW — "+m.why:"";
- el("nextTurn").disabled=!state.answered;
- el("nextTurn").textContent=state.turn===5?"FINISH MISSION →":"NEXT TURN →";
+ applyOrder(selected,o);
 }
-function answerMission(index){
- if(state.answered||state.finished)return;
- const m=missions[state.turn];
- const pkg=el("package").value;
- const costs={balanced:20,recon:15,escort:25};
- const cost=costs[pkg];
- if(state.resources<cost){toast("Not enough resources. Choose another package.");return;}
- state.resources-=cost;
- state.answered=true;
- state.lastAnswer=index;
- state.lastCorrect=index===m.answer;
- if(state.lastCorrect){
-  state.score+=20;
-  state.correct++;
-  state.readiness=clamp(state.readiness+5,0,100);
-  addEvent("Objective achieved. +20 mission points.");
-  toast("MISSION SUCCESS • +20 POINTS");
+function applyOrder(index,o){
+ if(state.over)return;
+ const p=state.planes[index];
+ if(!p||p.hp<=0)return;
+ if(!permitted(p,o)){
+  event("ORDER REJECTED",p.id+" does not have the simulated capability for "+o+". Select an aircraft with the matching role.");
+  return;
+ }
+ p.order=o;
+ pending=o;
+ if(o==="ESCORT"){
+  p.target=null;
+  event("FIGHTER ESCORT",p.id+" will track the transport. This provides simulated protection against enemy aircraft.");
+  if(tutorialStep===2)advanceTutorial();
+ }
+ if(o==="EVAC"){
+  p.target={...site};
+  p.phase="outbound";
+  event("EVACUATION ORDER",p.id+" is assigned to move a civilian group to safety. The transport must reach the site and return.");
+  if(tutorialStep===3)advanceTutorial();
+ }
+ if(o==="RTB"){
+  p.target={...base};
+  event("RETURN TO BASE",p.id+" will travel to its home operating base and recover fuel.");
+ }
+ if(o==="RECON"||o==="CAP"){
+  event("WAYPOINT REQUIRED","Click a location on the map to assign the "+o+" mission.");
+ }
+ render();
+}
+function waypoint(x,y){
+ if(joined){
+  send({type:"waypoint",index:selected,x,y});
+  return;
+ }
+ applyWaypoint(selected,x,y);
+}
+function applyWaypoint(index,x,y){
+ const p=state.planes[index];
+ if(!p||!["RECON","CAP"].includes(p.order))return;
+ p.target={x,y};
+ event("WAYPOINT ASSIGNED",p.id+" will proceed to the selected location to conduct "+p.order+".");
+ if(tutorialStep===1&&p.role==="recon")advanceTutorial();
+ render();
+}
+function move(p,dt){
+ if(!p.target||p.hp<=0)return;
+ const d=distance(p,p.target);
+ const step=p.v*dt;
+ if(d<=step){
+  p.x=p.target.x;p.y=p.target.y;
+  p.target=null;
+  arrival(p);
  }else{
-  state.readiness=clamp(state.readiness-10,0,100);
-  addEvent("Decision needs improvement. Review the feedback.");
-  toast("DECISION REVIEW REQUIRED");
+  p.x+=(p.target.x-p.x)/d*step;
+  p.y+=(p.target.y-p.y)/d*step;
  }
- save();update();
-}
-function advanceTurn(){
- if(!state.answered)return;
- if(state.turn>=5){
-  state.finished=true;
-  addEvent("Training mission complete.");
-  update();navigate("review");return;
+ p.fuel=Math.max(0,p.fuel-dt*.08);
+ if(p.fuel<=0&&p.hp>0){
+  p.hp=0;
+  event("FUEL EXHAUSTED",p.id+" was lost in this simplified model after exhausting its fuel. Monitor fuel and return to base.");
+  if(p.role==="transport")finish(false);
  }
- state.turn++;
- state.answered=false;
- state.resources=clamp(state.resources+18,0,100);
- addEvent("New mission turn initiated. Resources replenished.");
- update();
 }
-function renderQuiz(){
- const index=state.quizIndex;
- const q=questions[index];
- el("quizNumber").textContent="QUESTION "+(index+1)+" OF "+questions.length;
- el("quizProgress").style.width=((index+1)/questions.length*100)+"%";
- el("quizQuestion").textContent=q[0];
- el("quizOptions").innerHTML="";
- q[1].forEach((option,i)=>{
+function arrival(p){
+ if(p.order==="RECON"&&distance(p,site)<180&&!state.recon){
+  state.recon=true;
+  event("ISR REPORT","The reconnaissance aircraft surveyed the mission area. Intelligence collection helps reduce uncertainty.");
+ }
+ if(p.order==="EVAC"){
+  if(p.phase==="outbound"&&distance(p,site)<60){
+   p.cargo=1;p.phase="inbound";p.target={...base};
+   event("CIVILIANS BOARDED","The transport reached the site and collected one group. It must return safely to receive evacuation credit.");
+  }else if(p.phase==="inbound"&&distance(p,base)<60){
+   p.cargo=0;state.evac++;
+   event("EVACUATION COMPLETE","A civilian group arrived at the home base. Progress: "+state.evac+"/3.");
+   if(state.evac>=3)finish(true);
+   else{p.phase="outbound";p.target={...site}}
+  }
+ }
+ if(p.order==="RTB"&&distance(p,base)<65){
+  p.fuel=100;p.order="HOLD";
+  event("AIRCRAFT RECOVERED",p.id+" reached base and refueled.");
+ }
+}
+function simulate(dt){
+ if(state.over||joined)return;
+ state.time+=dt;
+ const fighter=state.planes[0],transport=state.planes[2];
+ for(const p of state.planes){
+  if(p.order==="ESCORT"&&p.role==="fighter"){
+   p.target={x:transport.x-35,y:transport.y-35};
+  }
+  move(p,dt);
+ }
+ for(const e of state.enemies){
+  if(e.hp<=0)continue;
+  const d=distance(e,transport);
+  if(d>0&&transport.hp>0){
+   e.x+=(transport.x-e.x)/d*levels[difficulty].enemySpeed*dt;
+   e.y+=(transport.y-e.y)/d*levels[difficulty].enemySpeed*dt;
+  }
+  if(fighter.hp>0&&["ESCORT","CAP"].includes(fighter.order)
+     &&distance(e,fighter)<125){
+   e.hp=Math.max(0,e.hp-17*dt);
+   if(e.hp===0)event("THREAT NEUTRALIZED","Fighter protection successfully stopped a computer-controlled threat in this simplified model.");
+  }else if(distance(e,transport)<75){
+   transport.hp=Math.max(0,transport.hp-levels[difficulty].damage*dt);
+   if(transport.hp===0){
+    event("TRANSPORT LOST","The computer opponent intercepted the transport. Earlier escort and reconnaissance planning could improve mission survivability.");
+    finish(false);
+   }
+  }
+ }
+ if(state.time>=levels[difficulty].deadline&&!state.over)finish(false);
+ render();
+}
+function toggle(){
+ if(joined)return;
+ if(state.over)return;
+ state.running=!state.running;
+ event(state.running?"SIMULATION RUNNING":"SIMULATION PAUSED",
+ state.running?"Time advances, aircraft move, and computer threats respond.":"Time has stopped so you can reassess your plan.");
+ if(tutorialStep===4&&state.running)advanceTutorial();
+ else if(tutorialStep===5&&!state.running)advanceTutorial();
+ render();
+}
+function setSpeed(n){
+ if(joined)return;
+ state.speed=n;
+ event("SPEED CHANGED","Simulation playback adjusted to "+n+"×.");
+}
+function finish(win){
+ if(state.over)return;
+ state.over=true;
+ state.running=false;
+ event(win?"MISSION SUCCESS":"MISSION INCOMPLETE",
+ win?"All three civilian groups were evacuated. Review how your decisions affected the result.":"The scenario ended before all groups were evacuated. Review flight protection, timing and mission coordination.");
+ renderReview();
+ if(tutorialStep===6)advanceTutorial();
+}
+function render(){
+ if(!state)return;
+ $("clock").textContent="T+ "+Math.floor(state.time);
+ $("modeLabel").textContent=difficulty.toUpperCase();
+ $("roomLabel").textContent=host?"HOST":joined?"CONNECTED":"SOLO";
+ $("evacStatus").textContent="EVACUATED "+state.evac+" / 3";
+ $("threatStatus").textContent="THREATS "+state.enemies.filter(e=>e.hp>0).length;
+ $("playButton").textContent=state.running?"Ⅱ PAUSE":"▶ START";
+ $("playButton").disabled=joined;
+ $("flightList").innerHTML="";
+ state.planes.forEach((p,i)=>{
   const b=document.createElement("button");
-  b.className="option";
-  b.textContent=String.fromCharCode(65+i)+". "+option;
-  b.disabled=state.quizAnswered;
-  if(state.quizAnswered&&i===q[2])b.classList.add("correct");
-  if(state.quizAnswered&&i===state.quizLast&&i!==q[2])b.classList.add("wrong");
-  b.onclick=()=>answerQuiz(i);
-  el("quizOptions").appendChild(b);
+  b.className="full "+(selected===i?"primary":"");
+  b.textContent=p.id+" | "+p.type+" | "+p.order;
+  b.onclick=()=>selectPlane(i);
+  $("flightList").appendChild(b);
  });
- el("quizFeedback").textContent=state.quizAnswered?q[3]:"";
- el("quizNext").disabled=!state.quizAnswered;
- el("quizNext").textContent=index===questions.length-1?"FINISH QUIZ →":"NEXT QUESTION →";
-}
-function answerQuiz(i){
- if(state.quizAnswered)return;
- state.quizAnswered=true;
- state.quizLast=i;
- state.quizTotal++;
- if(i===questions[state.quizIndex][2])state.quizCorrect++;
- update();
- toast(i===questions[state.quizIndex][2]?"Correct answer!":"Review the explanation.");
-}
-function nextQuestion(){
- if(!state.quizAnswered)return;
- if(state.quizIndex===questions.length-1){
-  toast("Drills completed! Review your score.");
-  navigate("review");return;
- }
- state.quizIndex++;
- state.quizAnswered=false;
- update();
-}
-function restartQuiz(){
- state.quizIndex=0;state.quizCorrect=0;
- state.quizTotal=0;state.quizAnswered=false;
- update();toast("Quiz restarted.");
+ const p=state.planes[selected];
+ $("flightInfo").innerHTML=
+  "<div class='stat'><span>Flight</span><strong>"+p.id+"</strong></div>"+
+  "<div class='stat'><span>Role</span><strong>"+p.role+"</strong></div>"+
+  "<div class='stat'><span>Order</span><strong>"+p.order+"</strong></div>"+
+  "<div class='stat'><span>Fuel</span><strong>"+Math.round(p.fuel)+"%</strong></div>"+
+  "<div class='stat'><span>Condition</span><strong>"+Math.round(p.hp)+"%</strong></div>";
+ $("objectives").innerHTML=
+  "<div class='stat'><span>Recon</span><strong>"+(state.recon?"DONE":"PENDING")+"</strong></div>"+
+  "<div class='stat'><span>Evacuation</span><strong>"+state.evac+"/3</strong></div>";
 }
 function renderReview(){
- el("finalScore").textContent=state.score;
- el("finalTurns").textContent=state.finished?6:state.turn;
- el("finalCorrect").textContent=state.correct+" / 6";
- el("finalReady").textContent=state.readiness+"%";
- el("reviewText").textContent=state.finished?
- "You completed the six-turn AFEX training exercise. Your performance reflects the decisions made during the simplified simulation. Review the lessons and try again to improve your results.":
- "Your exercise is still in progress. Complete the mission turns to receive your full assessment.";
+ if(!state)return;
+ const surviving=state.planes.filter(p=>p.hp>0).length;
+ const data=[
+  ["Evacuated groups",state.evac+" / 3"],
+  ["Reconnaissance",state.recon?"Completed":"Not completed"],
+  ["Aircraft remaining",surviving+" / 3"],
+  ["Computer threats remaining",state.enemies.filter(e=>e.hp>0).length],
+  ["Difficulty",difficulty],
+  ["Outcome",state.over?(state.evac>=3?"SUCCESS":"INCOMPLETE"):"IN PROGRESS"]
+ ];
+ $("results").innerHTML=data.map(x=>
+  "<div class='card'><small>"+x[0]+"</small><h2>"+x[1]+"</h2></div>"
+ ).join("");
+ if(tutorialStep===7)advanceTutorial();
 }
-function resetMission(){
- if(!confirm("Restart the mission? Your current mission score will reset."))return;
- const quiz={quizIndex:state.quizIndex,quizCorrect:state.quizCorrect,
-  quizAnswered:state.quizAnswered,quizTotal:state.quizTotal};
- state={...fresh(),...quiz};
- update();navigate("mission");
+function restart(){
+ if(!confirm("Restart this mission?"))return;
+ fresh(difficulty);
+ openPage("game");
 }
-update();
+function advanceTutorial(){
+ tutorialStep++;
+ renderTutorial();
+ if(tutorialStep<lessons.length){
+  event("TUTORIAL STEP COMPLETED","Return to the Guided Tutorial tab for the next lesson.");
+ }
+}
+function renderTutorial(){
+ if(tutorialStep<0)return;
+ if(tutorialStep>=lessons.length){
+  $("tutNumber").textContent="COMPLETED";
+  $("tutTitle").textContent="Tutorial Complete!";
+  $("tutText").textContent="You have practiced flight selection, orders, mission execution and after-action review.";
+ }else{
+  $("tutNumber").textContent="STEP "+(tutorialStep+1)+" OF "+lessons.length;
+  $("tutTitle").textContent=lessons[tutorialStep][0];
+  $("tutText").textContent=lessons[tutorialStep][1];
+ }
+ $("tutorialBar").style.width=Math.min(100,tutorialStep/lessons.length*100)+"%";
+}
+function beginTutorial(){
+ leaveRoom();
+ fresh("beginner");
+ tutorialStep=0;
+ renderTutorial();
+ openPage("tutorial");
+}
+function openHelp(){
+ dialog("HOW TO PLAY",
+ "<p><b>1.</b> Select an aircraft on the left.</p>"+
+ "<p><b>2.</b> Assign a mission order on the right.</p>"+
+ "<p><b>3.</b> If needed, click the map to choose a waypoint.</p>"+
+ "<p><b>4.</b> Press START to move aircraft and activate the computer opponent.</p>"+
+ "<p><b>5.</b> Watch the event feed for explanations.</p>"+
+ "<p><b>6.</b> Open the After-Action Review to evaluate your decisions.</p>");
+}
+function dialog(title,html){
+ $("modalTitle").textContent=title;
+ $("modalBody").innerHTML=html;
+ $("modalBg").classList.add("open");
+}
+function closeModal(){$("modalBg").classList.remove("open")}
+
+function canvasSize(canvas,context){
+ const w=canvas.clientWidth,h=canvas.clientHeight;
+ const d=window.devicePixelRatio||1;
+ if(canvas.width!==Math.round(w*d)||canvas.height!==Math.round(h*d)){
+  canvas.width=Math.round(w*d);
+  canvas.height=Math.round(h*d);
+ }
+ context.setTransform(d,0,0,d,0,0);
+ return {w,h};
+}
+function draw(){
+ if(!state)return;
+ const {w,h}=canvasSize(map,ctx);
+ ctx.fillStyle="#08263e";ctx.fillRect(0,0,w,h);
+ ctx.save();ctx.translate(view.x,view.y);ctx.scale(view.z,view.z);
+ ctx.fillStyle="#235150";
+ ctx.beginPath();
+ ctx.moveTo(0,0);ctx.lineTo(260,0);ctx.lineTo(300,250);
+ ctx.lineTo(220,510);ctx.lineTo(0,620);ctx.fill();
+ ctx.beginPath();
+ ctx.moveTo(1000,0);ctx.lineTo(W,0);ctx.lineTo(W,H);
+ ctx.lineTo(1090,700);ctx.lineTo(965,460);ctx.fill();
+ ctx.strokeStyle="#34536c";ctx.font="12px monospace";
+ for(let x=0;x<W;x+=100){
+  ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
+  ctx.fillStyle="#aac4d5";ctx.fillText(String.fromCharCode(65+x/100),x+5,17);
+ }
+ for(let y=0;y<H;y+=100){
+  ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+ }
+ function marker(p,color,label){
+  ctx.strokeStyle=color;ctx.beginPath();
+  ctx.arc(p.x,p.y,35,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=color;ctx.fillRect(p.x-8,p.y-8,16,16);
+  ctx.font="bold 12px monospace";
+  ctx.fillText(label,p.x-35,p.y+52);
+ }
+ marker(base,"#58d9f5","HOME BASE");
+ marker(site,"#69eeb1","EVAC SITE");
+ for(const e of state.enemies){
+  if(e.hp<=0)continue;
+  ctx.fillStyle="#fb7889";ctx.beginPath();
+  ctx.moveTo(e.x,e.y-13);ctx.lineTo(e.x+12,e.y+10);
+  ctx.lineTo(e.x-12,e.y+10);ctx.fill();
+ }
+ state.planes.forEach((p,i)=>{
+  if(p.hp<=0)return;
+  if(p.target){
+   ctx.setLineDash([7,7]);ctx.strokeStyle="#7ccfff99";
+   ctx.beginPath();ctx.moveTo(p.x,p.y);
+   ctx.lineTo(p.target.x,p.target.y);ctx.stroke();ctx.setLineDash([]);
+  }
+  ctx.save();ctx.translate(p.x,p.y);
+  if(p.target)ctx.rotate(Math.atan2(p.target.y-p.y,p.target.x-p.x)+Math.PI/2);
+  ctx.fillStyle=i===selected?"#ffe2a1":"#68daff";
+  ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(5,-3);
+  ctx.lineTo(15,7);ctx.lineTo(4,7);ctx.lineTo(2,13);
+  ctx.lineTo(-2,13);ctx.lineTo(-4,7);ctx.lineTo(-15,7);
+  ctx.lineTo(-5,-3);ctx.closePath();ctx.fill();ctx.restore();
+  if(i===selected){
+   ctx.strokeStyle="#ffe2a1";ctx.beginPath();
+   ctx.arc(p.x,p.y,25,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.fillStyle="#fff";ctx.font="12px monospace";
+  ctx.fillText(p.id,p.x+18,p.y-16);
+ });
+ ctx.restore();
+ drawMini();
+}
+function drawMini(){
+ const {w,h}=canvasSize(mini,mc);
+ mc.fillStyle="#061b2a";mc.fillRect(0,0,w,h);
+ const dot=(p,color)=>{
+  mc.fillStyle=color;mc.beginPath();
+  mc.arc(p.x/W*w,p.y/H*h,4,0,Math.PI*2);mc.fill();
+ };
+ dot(base,"#58d9f5");dot(site,"#69eeb1");
+ state.planes.filter(p=>p.hp>0).forEach(p=>dot(p,"#68daff"));
+ state.enemies.filter(e=>e.hp>0).forEach(e=>dot(e,"#fb7889"));
+}
+function world(x,y){return{x:(x-view.x)/view.z,y:(y-view.y)/view.z}}
+let drag=null;
+map.addEventListener("pointerdown",e=>{
+ drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y,moved:false};
+ map.setPointerCapture(e.pointerId);
+});
+map.addEventListener("pointermove",e=>{
+ if(!drag)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+ if(Math.hypot(dx,dy)>5)drag.moved=true;
+ if(drag.moved){view.x=drag.vx+dx;view.y=drag.vy+dy}
+});
+map.addEventListener("pointerup",e=>{
+ if(!drag)return;
+ const moved=drag.moved;drag=null;if(moved)return;
+ const r=map.getBoundingClientRect();
+ const p=world(e.clientX-r.left,e.clientY-r.top);
+ const i=state.planes.findIndex(a=>a.hp>0&&distance(a,p)<26/view.z);
+ if(i>=0){selectPlane(i);return}
+ waypoint(p.x,p.y);
+});
+map.addEventListener("wheel",e=>{
+ e.preventDefault();zoom(e.deltaY<0?1.12:.89);
+},{passive:false});
+mini.addEventListener("click",e=>{
+ const r=mini.getBoundingClientRect();
+ const x=(e.clientX-r.left)/r.width*W;
+ const y=(e.clientY-r.top)/r.height*H;
+ view.x=map.clientWidth/2-x*view.z;
+ view.y=map.clientHeight/2-y*view.z;
+});
+function zoom(k){view.z=Math.max(.5,Math.min(3,view.z*k))}
+function resetView(){view={x:0,y:0,z:1}}
+
+// Peer-to-peer team play.
+// The host runs the simulation and sends state to connected players.
+function leaveRoom(){
+ if(peer){try{peer.destroy()}catch(e){}}
+ peer=null;connections=[];host=false;joined=false;
+ $("teamStatus").textContent="Not connected.";
+ $("hostCode").textContent="";
+}
+function hostRoom(){
+ leaveRoom();
+ if(typeof Peer==="undefined"){
+  $("teamStatus").textContent="Multiplayer service unavailable on this network.";
+  return;
+ }
+ const id="AFEX-"+Math.random().toString(36).slice(2,8).toUpperCase();
+ peer=new Peer(id);
+ peer.on("open",()=>{
+  host=true;fresh("beginner");
+  $("hostCode").textContent="ROOM CODE: "+id;
+  $("teamStatus").textContent="Hosting room "+id;
+ });
+ peer.on("connection",c=>{
+  connections.push(c);
+  c.on("open",()=>c.send({type:"state",state,difficulty}));
+  c.on("data",m=>{
+   if(m.type==="order")applyOrder(m.index,m.order);
+   if(m.type==="waypoint")applyWaypoint(m.index,m.x,m.y);
+  });
+ });
+ peer.on("error",e=>$("teamStatus").textContent="Connection error: "+e.type);
+}
+function joinRoom(){
+ leaveRoom();
+ if(typeof Peer==="undefined"){
+  $("teamStatus").textContent="Multiplayer service unavailable.";
+  return;
+ }
+ const code=$("joinCode").value.trim().toUpperCase();
+ if(!/^AFEX-[A-Z0-9]{6}$/.test(code)){
+  $("teamStatus").textContent="Enter a valid AFEX room code.";
+  return;
+ }
+ peer=new Peer();
+ peer.on("open",()=>{
+  const c=peer.connect(code,{reliable:true});
+  connections=[c];
+  c.on("open",()=>{
+   joined=true;
+   $("teamStatus").textContent="Connected to "+code;
+   openPage("game");
+  });
+  c.on("data",m=>{
+   if(m.type==="state"){
+    state=m.state;difficulty=m.difficulty;render();
+   }
+  });
+  c.on("close",()=>{
+   joined=false;
+   $("teamStatus").textContent="Connection closed.";
+  });
+ });
+ peer.on("error",e=>$("teamStatus").textContent="Join failed: "+e.type);
+}
+function send(message){
+ connections.filter(c=>c.open).forEach(c=>c.send(message));
+}
+function broadcast(){
+ if(host){
+  connections.filter(c=>c.open).forEach(c=>
+   c.send({type:"state",state,difficulty}));
+ }
+}
+document.addEventListener("keydown",e=>{
+ if(e.code==="Space"&&!e.repeat&&
+    !$("modalBg").classList.contains("open")&&
+    !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){
+  e.preventDefault();toggle();
+ }
+});
+
+let frameCount=0;
+function frame(now){
+ const dt=Math.min((now-last)/1000,.06);
+ last=now;
+ if(state&&state.running&&!joined)simulate(dt*state.speed*3);
+ if(host&&++frameCount%15===0)broadcast();
+ draw();
+ requestAnimationFrame(frame);
+}
+fresh("beginner");
+requestAnimationFrame(frame);
 </script>
 </body>
 </html>
