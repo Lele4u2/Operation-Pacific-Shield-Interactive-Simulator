@@ -1,0 +1,2920 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OPS | Operation Pacific Shield</title>
+<style>
+:root{
+--bg:#06111c;--p:#102634;--p2:#173544;
+--edge:#385567;--gold:#f1be65;--cyan:#68c9e8;
+--green:#68dbb2;--red:#fa8490;
+--text:#f2f5ef;--muted:#a4bbc7
+}
+*{box-sizing:border-box}
+body{
+margin:0;
+background:linear-gradient(145deg,#060e17,#0b2434);
+color:var(--text);
+font:14px system-ui,'Segoe UI',Arial,sans-serif
+}
+button,select,input{font:inherit}
+button{
+background:#1a3949;
+border:1px solid #567583;
+color:var(--text);
+border-radius:8px;
+padding:10px 12px;
+cursor:pointer;
+font-weight:750;
+transition:background .15s,transform .15s
+}
+button:hover:not(:disabled){
+background:#2a5668;
+transform:translateY(-1px)
+}
+button:disabled{opacity:.38;cursor:not-allowed}
+.primary{
+background:linear-gradient(135deg,#f3cd81,#dca850);
+color:#13222a;border-color:#f7d696
+}
+.primary:hover:not(:disabled){
+background:#ffdb93;color:#13222a
+}
+.softbutton{background:#102632}
+.tiny{font-size:11px}
+.muted{color:var(--muted)}
+.gold{color:var(--gold)}
+.green{color:var(--green)}
+.red{color:var(--red)}
+h1,h2,h3,p{margin:0}
+h1{
+font-size:clamp(32px,5vw,65px);
+line-height:.98;letter-spacing:1px
+}
+h2{font-size:19px}
+h3{font-size:14px}
+p{
+color:var(--muted);
+line-height:1.55;margin:7px 0
+}
+.kicker{
+font-size:10px;letter-spacing:2.1px;
+color:var(--gold);font-weight:950;
+text-transform:uppercase;margin-bottom:7px
+}
+.top{
+display:flex;flex-wrap:wrap;gap:12px;
+justify-content:space-between;align-items:center;
+padding:12px 16px;background:#0b1b29;
+border-bottom:1px solid var(--edge)
+}
+.logo{
+font-weight:950;font-size:20px;letter-spacing:1px
+}
+.logo span{color:var(--gold)}
+.hud{display:flex;gap:16px;flex-wrap:wrap}
+.hud div{
+font-size:10px;color:var(--muted);
+font-weight:800;letter-spacing:.7px
+}
+.hud strong{
+display:block;color:var(--gold);
+font-size:17px;letter-spacing:0
+}
+.topactions{display:flex;gap:6px}
+.shell{
+display:grid;
+grid-template-columns:270px minmax(360px,1fr) 355px;
+gap:11px;max-width:1800px;
+margin:auto;padding:11px;
+min-height:calc(100vh - 69px)
+}
+.column{
+display:flex;flex-direction:column;
+gap:11px;min-width:0
+}
+.panel{
+background:linear-gradient(155deg,#173140,#0c2230);
+border:1px solid var(--edge);
+border-radius:12px;padding:13px;
+box-shadow:0 12px 25px #0003
+}
+.stretch{flex:1}
+.meter{
+height:8px;background:#26404d;
+border-radius:8px;overflow:hidden;margin:9px 0
+}
+.meter span{
+height:100%;display:block;
+background:linear-gradient(90deg,#5ab8cc,var(--green));
+transition:width .4s
+}
+.grid2{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:7px
+}
+.stat{
+display:flex;align-items:center;
+justify-content:space-between;
+padding:7px 0;
+border-bottom:1px solid #314b59;
+gap:6px;font-size:12px
+}
+.stat b{color:var(--gold)}
+.wide{width:100%;margin-top:8px}
+.tag{
+border:1px solid #637c87;
+border-radius:7px;padding:4px 7px;
+font-size:10px;font-weight:850;
+letter-spacing:.4px;display:inline-block
+}
+.tag.good{border-color:var(--green);color:var(--green)}
+.tag.warn{border-color:var(--gold);color:var(--gold)}
+.tag.bad{border-color:var(--red);color:var(--red)}
+.mission{
+border:1px solid #466273;
+border-radius:9px;padding:9px;
+margin:8px 0;background:#102936;
+cursor:pointer
+}
+.mission:hover{border-color:var(--cyan)}
+.mission b{display:block;font-size:12px}
+.mission small{
+display:block;color:var(--muted);margin-top:4px
+}
+.mission.complete{border-left:4px solid var(--green)}
+.mission.current{border-left:4px solid var(--gold)}
+.roster{
+display:flex;align-items:center;
+justify-content:space-between;
+padding:6px 0;border-bottom:1px solid #2f4b58
+}
+.boardframe{
+flex:1;min-height:450px;
+position:relative;
+border:1px solid #55758a;
+border-radius:10px;overflow:hidden;
+background:radial-gradient(ellipse at 45% 50%,#1d5068,#09263b)
+}
+.boardframe svg{
+width:100%;height:100%;display:block
+}
+.hex{
+fill:#31718a;fill-opacity:.12;
+stroke:#91bdd0;stroke-opacity:.34;cursor:pointer
+}
+.hex:hover{
+fill:#67bcd5;fill-opacity:.28
+}
+.hex.selected{
+fill:#f7c268;fill-opacity:.27;
+stroke:var(--gold);stroke-width:2.4
+}
+.point{cursor:pointer}
+.point:hover circle{stroke-width:5}
+.point text,.maptext{
+fill:#f5f0dd;font-size:11px;
+font-weight:900;paint-order:stroke;
+stroke:#09202c;stroke-width:3;
+text-anchor:middle;pointer-events:none
+}
+.maptip{
+position:absolute;bottom:9px;left:9px;right:9px;
+display:flex;align-items:center;
+justify-content:space-between;gap:8px;
+background:#071a26e5;border:1px solid #517186;
+border-radius:8px;padding:9px 11px;
+color:#e9f0e9;font-size:11px
+}
+.floating{
+position:absolute;top:11px;right:12px;
+padding:6px 8px;background:#071b28db;
+border:1px solid #41697e;
+border-radius:7px;color:var(--gold);
+font-weight:900;font-size:10px
+}
+.plane{cursor:pointer}
+.plane text{
+font-size:24px;fill:var(--gold);
+paint-order:stroke;
+stroke:#09222f;stroke-width:2
+}
+.route{
+stroke:var(--cyan);fill:none;
+stroke-width:3;stroke-dasharray:12 9;opacity:.8
+}
+.moving{
+animation:pulse 1.2s infinite alternate
+}
+@keyframes pulse{
+from{opacity:.5}
+to{opacity:1;filter:drop-shadow(0 0 8px #87d5ff)}
+}
+.tabs{
+display:flex;flex-wrap:wrap;
+gap:5px;margin:8px 0 12px
+}
+.tabs button{
+font-size:11px;padding:8px 9px;flex:1
+}
+.tabs .active{
+border-color:var(--gold);background:#594b32
+}
+.card{
+border:1px solid #4a6776;
+border-radius:9px;padding:11px;
+margin:9px 0;background:#102f3c
+}
+.card h3{
+color:#f0f0e8;font-size:14px
+}
+.card .controls{
+margin-top:9px;
+display:flex;flex-wrap:wrap;gap:5px
+}
+.card .controls button{
+flex:1;font-size:11px;padding:8px
+}
+.hint{
+border-left:3px solid var(--gold);
+background:#1d3e4b;border-radius:7px;
+padding:10px;color:#dce9e8;
+line-height:1.6;font-size:12px
+}
+.log{height:152px;overflow:auto}
+.logline{
+padding:6px 2px;border-bottom:1px solid #345060;
+color:#d0dfe4;font-size:11px
+}
+.logline b{color:var(--gold)}
+.slotgrid{
+display:grid;
+grid-template-columns:repeat(4,minmax(0,1fr));
+gap:6px;margin:10px 0
+}
+.slot{
+min-height:61px;padding:6px;
+border:2px dashed #597d8e;
+border-radius:8px;
+display:grid;place-content:center;
+text-align:center;font-size:10px;
+cursor:pointer;background:#143441;
+font-weight:800
+}
+.slot.filled{
+background:#265548;border-style:solid;
+border-color:var(--green)
+}
+.slot:hover{border-color:var(--gold)}
+.pieces{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:7px;margin:9px 0
+}
+.piece{cursor:grab;touch-action:manipulation}
+.piece.sel{
+border-color:var(--gold);background:#6a5530
+}
+.taskgrid{
+display:grid;
+grid-template-columns:1fr 1fr;gap:6px
+}
+.taskgrid button{
+font-size:11px;min-height:61px;
+text-align:left;white-space:pre-line
+}
+.taskgrid button.done{
+border-color:var(--green);color:var(--green)
+}
+.rfigrid{
+display:grid;
+grid-template-columns:1fr 1fr;gap:6px
+}
+.rfigrid button{
+font-size:11px;text-align:left;min-height:47px
+}
+.rfigrid .done{
+border-color:var(--green);color:var(--green)
+}
+.scrollwork{
+max-height:calc(100vh - 190px);overflow:auto
+}
+.status{
+border:1px solid #648b9d;border-radius:8px;
+background:#153344;padding:11px;
+font-size:12px;line-height:1.6
+}
+.overlay{
+position:fixed;inset:0;background:#020a10ed;
+backdrop-filter:blur(6px);z-index:50;
+display:flex;align-items:center;
+justify-content:center;padding:14px
+}
+.modal{
+background:linear-gradient(150deg,#153b4c,#091d2a);
+border:1px solid #66899c;
+box-shadow:0 20px 70px #000b;
+border-radius:15px;padding:26px;
+max-width:850px;width:100%;
+max-height:92vh;overflow:auto
+}
+.roles{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:9px;margin:18px 0
+}
+.roles button{
+min-height:117px;text-align:left
+}
+.roles button.pick{
+border-color:var(--gold);background:#625035
+}
+.roles strong{display:block;font-size:22px}
+.notice{
+position:fixed;top:78px;right:12px;
+z-index:90;max-width:360px;
+background:#204858;border:1px solid var(--gold);
+box-shadow:0 12px 30px #0009;
+border-radius:10px;padding:13px 15px
+}
+.notice strong{color:var(--gold)}
+.hidden{display:none!important}
+.helpbox{
+position:fixed;inset:0;z-index:80;
+background:#020a10da;
+display:grid;place-items:center;padding:18px
+}
+.helpbox .modal{max-width:600px}
+.footer-note{
+margin-top:14px;font-size:10px;color:#b7cbd0
+}
+.count{
+font-family:ui-monospace,Consolas,monospace;
+color:var(--gold)
+}
+select{
+background:#1b3948;color:white;
+border:1px solid #628291;
+padding:9px;border-radius:7px
+}
+button:focus-visible,.slot:focus-visible{
+outline:2px solid var(--gold);outline-offset:2px
+}
+@media(max-width:1150px){
+.shell{
+grid-template-columns:220px minmax(320px,1fr) 310px
+}
+}
+@media(max-width:850px){
+.shell{display:flex;flex-direction:column}
+.boardframe{height:400px;flex:none}
+.scrollwork{max-height:none}
+.roles{grid-template-columns:1fr 1fr}
+.top{gap:7px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+ <div class="logo">
+  OPS <span>/// OPERATION PACIFIC SHIELD</span>
+ </div>
+ <div class="hud">
+  <div>STATION<strong id="hrole">—</strong></div>
+  <div>TURN<strong id="hturn">—</strong></div>
+  <div>PHASE<strong id="hphase">—</strong></div>
+  <div>TRAINING VP<strong id="hscore">0 / 19</strong></div>
+ </div>
+ <div class="topactions">
+  <button onclick="showHelp('rules')">RULES</button>
+  <button onclick="showHelp('hint')">HINT</button>
+  <button onclick="rollDice()">🎲 D6</button>
+ </div>
+</header>
+
+<div class="shell">
+ <aside class="column">
+  <section class="panel">
+   <div class="kicker">Mission command</div>
+   <h2>FOS LANTERN</h2>
+   <p>
+    Assess, reinforce, and establish a fictional
+    forward operating site.
+   </p>
+   <div class="meter">
+    <span id="progress"></span>
+   </div>
+   <div class="stat">
+    <span>Mission progress</span>
+    <b id="progressText">0%</b>
+   </div>
+   <button class="primary wide"
+    id="endTurn" onclick="advance()">
+    ▶ EXECUTE TURN
+   </button>
+   <div class="grid2">
+    <button onclick="save()">SAVE</button>
+    <button onclick="newGame()">NEW GAME</button>
+   </div>
+  </section>
+
+  <section class="panel stretch">
+   <div class="kicker">Mission objectives</div>
+   <div id="objectives"></div>
+   <div class="kicker" style="margin-top:14px">
+    Team roster
+   </div>
+   <div id="roster"></div>
+   <button class="wide softbutton"
+    onclick="changeRole()">
+    SWITCH MY STATION
+   </button>
+   <div class="kicker" style="margin-top:14px">
+    Instructor coach
+   </div>
+   <div class="hint" id="coach"></div>
+  </section>
+ </aside>
+
+ <main class="column">
+  <section class="panel stretch"
+   style="display:flex;flex-direction:column">
+   <div class="kicker">
+    Interactive tabletop / select a site or aircraft
+   </div>
+   <div style="display:flex;justify-content:space-between;gap:5px">
+    <h2>PACIFIC OPERATIONS BOARD</h2>
+    <span class="tag">FICTIONAL TRAINING</span>
+   </div>
+
+   <div class="boardframe">
+    <svg id="map" viewBox="0 0 900 520"
+     aria-label="Interactive exercise board"></svg>
+    <div class="floating">
+     CLICK HEXES • AIRCRAFT • BASES
+    </div>
+    <div class="maptip">
+     <span id="mapinfo">
+      Tap a location or aircraft to inspect its status.
+     </span>
+     <button onclick="setTab('BOARD')">
+      INSPECT
+     </button>
+    </div>
+   </div>
+
+   <div class="grid2" style="margin-top:8px">
+    <button onclick="setTab('MOB')">
+     ◈ FOS BOARD
+    </button>
+    <button onclick="setTab('CAOC')">
+     ✈ AIRCRAFT BOARD
+    </button>
+    <button onclick="setTab('MEDCOM')">
+     ✚ MEDCOM
+    </button>
+    <button onclick="setTab('SPACE')">
+     ◉ SPACE SUPPORT
+    </button>
+   </div>
+  </section>
+
+  <section class="panel">
+   <div class="kicker">Live operation log</div>
+   <div id="log" class="log" aria-live="polite"></div>
+  </section>
+ </main>
+
+ <aside class="column">
+  <section class="panel stretch scrollwork">
+   <div class="kicker">Operations workstation</div>
+   <div class="tabs" id="tabs"></div>
+   <div id="work"></div>
+  </section>
+ </aside>
+</div>
+
+<div id="welcome" class="overlay">
+ <div class="modal">
+  <div class="kicker">
+   Original OPS-inspired interactive tabletop training
+  </div>
+  <h1>
+   OPERATION<br>
+   <span class="gold">PACIFIC SHIELD</span>
+  </h1>
+  <p>
+   Play OPS hands-on: select a role, move cargo
+   counters into aircraft slots, make requests,
+   approve flights, execute turns, and watch
+   the board change. The computer runs
+   the other stations.
+  </p>
+  <div class="roles" id="roles"></div>
+  <div class="grid2">
+   <button onclick="pickRole(ROLES[Math.floor(Math.random()*4)])">
+    🎲 RANDOM ROLE
+   </button>
+   <button class="primary" onclick="startGame()">
+    ▶ START OPS GAME
+   </button>
+  </div>
+  <button id="resumeBtn" class="wide hidden"
+   onclick="resumeGame()">
+   ↻ RESUME SAVED MISSION
+  </button>
+  <p class="footer-note">
+   This is a fictional OPS training prototype.
+   Changing stations works on one device.
+   Real remote multiplayer requires an additional server.
+  </p>
+ </div>
+</div>
+
+<div id="help" class="helpbox hidden">
+ <div class="modal">
+  <div style="display:flex;justify-content:space-between;gap:9px">
+   <h2 id="helpTitle">Help</h2>
+   <button onclick="$('help').classList.add('hidden')">
+    ✕ CLOSE
+   </button>
+  </div>
+  <div id="helpContent"
+   style="margin-top:12px;line-height:1.7"></div>
+ </div>
+</div>
+
+<div id="toast" class="notice hidden">
+ <strong id="toastTitle"></strong>
+ <p id="toastBody"></p>
+</div>
+
+<script>
+'use strict';
+
+const ROLES = ['MOB','CAOC','SPACE','MEDCOM'];
+
+const DESCS = {
+ MOB:'Airfield assessment, cargo loading, FOS tasks',
+ CAOC:'Aircraft allocation, ATO, flight approval',
+ SPACE:'Space coverage, communication support',
+ MEDCOM:'Triage, medical lift and patient tracking'
+};
+
+const RFIS = [
+ 'Crash Fire Rescue',
+ 'Mobility Support',
+ 'Ramp Space',
+ 'Air Traffic Control',
+ 'Equipment',
+ 'Bed Down',
+ 'Fuel',
+ 'Airfield Security',
+ 'Host Nation Support',
+ 'Medical Capability'
+];
+
+const TASKS = [
+ ['Bed Down & Sanitation',1,1,[]],
+ ['Power',1,1,[]],
+ ['Command & Control',1,1,[2]],
+ ['Contracts',0,1,[]],
+ ['Ramp Security',0,1,[]],
+ ['Perimeter Security',0,1,[5]],
+ ['Missile Defense',1,1,[5]],
+ ['Camouflage / Hardening',1,0,[6]],
+ ['Airfield Operations',1,1,[2]],
+ ['Mobility Support',1,1,[9]],
+ ['Combat Turn Support',1,1,[9]],
+ ['Fueling Operations',1,1,[9]],
+ ['Host Nation Relations',0,1,[]],
+ ['Health & Welfare',0,1,[1]],
+ ['Base Recovery',1,1,[9]],
+ ['Logistics Support',1,1,[9]]
+];
+
+const SAVEKEY = 'ops-tabletop-copy-paste-v1';
+const $ = id => document.getElementById(id);
+
+let S = null;
+let chosen = 'MOB';
+let tab = 'MOB';
+let token = 'pallet';
+let selectedHex = '';
+let selectedPlane = 'C17';
+let timer = null;
+
+function fresh(role){
+ return {
+  version:1,
+  role,
+  turn:1,
+  phase:'PLAN',
+  win:false,
+  gameOver:false,
+  seq:0,
+  score:0,
+  log:[],
+  rfiAsked:[],
+  rfiAnswered:[],
+  source:{pallet:10,team:10},
+  site:{pallet:0,team:0},
+  taskDone:[],
+  taskQueue:[],
+  verified:false,
+  space:{queued:false,done:false},
+  med:{
+   triageQueued:false,
+   triaged:false,
+   fos:1,
+   hospital:0,
+   beds:2
+  },
+  planes:[
+   {
+    id:'C17',
+    label:'C-17 GLOBEMASTER',
+    cap:8,
+    type:'cargo',
+    status:'AVAILABLE',
+    load:[],
+    request:null
+   },
+   {
+    id:'C130',
+    label:'C-130 HERCULES',
+    cap:5,
+    type:'cargo',
+    status:'AVAILABLE',
+    load:[],
+    request:null
+   },
+   {
+    id:'C5',
+    label:'C-5 GALAXY',
+    cap:12,
+    type:'cargo',
+    status:'AVAILABLE',
+    load:[],
+    request:null
+   },
+   {
+    id:'MED1',
+    label:'MEDICAL C-130',
+    cap:1,
+    type:'med',
+    status:'AVAILABLE',
+    load:[],
+    request:null
+   }
+  ],
+  requests:[],
+  event:null,
+  selectedLocation:'FOS LANTERN',
+  lastDice:null
+ };
+}
+
+function log(msg,who='OPS'){
+ S.log.unshift({turn:S.turn,who,msg});
+ S.log=S.log.slice(0,90);
+}
+
+function toast(title,msg){
+ $('toastTitle').textContent=title;
+ $('toastBody').textContent=msg;
+ $('toast').classList.remove('hidden');
+ clearTimeout(timer);
+ timer=setTimeout(
+  ()=>$('toast').classList.add('hidden'),
+  3900
+ );
+}
+
+function uid(){
+ return 'R'+(++S.seq);
+}
+
+function plane(id){
+ return S.planes.find(x=>x.id===id);
+}
+
+function request(id){
+ return S.requests.find(x=>x.id===id);
+}
+
+function activeRequest(type){
+ return S.requests.some(x=>
+  x.type===type &&
+  !['DONE','CANCELLED'].includes(x.status)
+ );
+}
+
+function allowed(actor){
+ return S.role===actor &&
+  S.phase==='PLAN' &&
+  !S.gameOver;
+}
+
+function doAction(type,arg={},actor=S.role){
+ try{
+  if(!S||S.gameOver||S.phase!=='PLAN'){
+   throw Error(
+    'Start a game or wait until the next planning turn.'
+   );
+  }
+
+  if(actor===S.role||actor==='AI'){
+   apply(type,arg,actor);
+  }else{
+   throw Error('This belongs to '+actor+'.');
+  }
+
+  driveAI();
+  updateScore();
+  render();
+  save(false);
+ }catch(e){
+  if(actor!=='AI'){
+   toast('ORDER NOT ACCEPTED',e.message);
+  }
+ }
+}
+
+function apply(type,a,actor){
+ let r,p;
+
+ const is=name=>{
+  if(actor!==name&&actor!=='AI'){
+   throw Error('Only '+name+' may issue this action.');
+  }
+ };
+
+ switch(type){
+
+ case 'RFI':
+  is('MOB');
+
+  if(S.rfiAsked.includes(a.n)){
+   throw Error('Already requested.');
+  }
+
+  if(
+   S.rfiAsked.length>=5 &&
+   (
+    S.rfiAnswered.length<5 ||
+    S.site.team<2
+   )
+  ){
+   throw Error(
+    'Answer the first five RFIs and deliver two teams before follow-on assessment.'
+   );
+  }
+
+  S.rfiAsked.push(a.n);
+  log('Requested RFI: '+RFIS[a.n],'MOB');
+  break;
+
+ case 'CARGO':
+  is('MOB');
+
+  if(activeRequest('cargo')){
+   throw Error('Finish the active cargo request first.');
+  }
+
+  p=plane(a.plane);
+
+  if(
+   !p ||
+   p.type!=='cargo' ||
+   p.status!=='AVAILABLE'
+  ){
+   throw Error('Select an available cargo aircraft.');
+  }
+
+  if(p.cap<7){
+   throw Error(
+    'The selected aircraft cannot carry this practice load.'
+   );
+  }
+
+  r={
+   id:uid(),
+   type:'cargo',
+   plane:p.id,
+   status:'PENDING',
+   need:{pallet:4,team:3}
+  };
+
+  S.requests.push(r);
+  p.status='REQUESTED';
+  p.request=r.id;
+
+  log(
+   'MOB requested '+p.label+
+   ' for four pallets and three teams.',
+   'MOB'
+  );
+  break;
+
+ case 'MEDREQ':
+  is('MEDCOM');
+
+  if(!S.med.triaged||S.med.fos<1){
+   throw Error('Triage the patient first.');
+  }
+
+  if(activeRequest('med')){
+   throw Error('Medical request already active.');
+  }
+
+  p=plane('MED1');
+
+  if(p.status!=='AVAILABLE'){
+   throw Error('Medical aircraft unavailable.');
+  }
+
+  r={
+   id:uid(),
+   type:'med',
+   plane:'MED1',
+   status:'PENDING',
+   need:{patient:1}
+  };
+
+  S.requests.push(r);
+  p.status='REQUESTED';
+  p.request=r.id;
+  log('MEDCOM requested medical aircraft.','MEDCOM');
+  break;
+
+ case 'ALLOCATE':
+  is('CAOC');
+  r=request(a.id);
+
+  if(!r||r.status!=='PENDING'){
+   throw Error('Request is not pending.');
+  }
+
+  r.status='ALLOCATED';
+  plane(r.plane).status='ALLOCATED';
+
+  log(
+   'CAOC allocated '+
+   plane(r.plane).label+
+   ' to '+r.id+'.',
+   'CAOC'
+  );
+  break;
+
+ case 'SLOT':
+  is(a.type==='patient'?'MEDCOM':'MOB');
+  r=request(a.id);
+
+  if(!r||r.status!=='ALLOCATED'){
+   throw Error(
+    'Wait for CAOC to allocate this aircraft.'
+   );
+  }
+
+  p=plane(r.plane);
+
+  if(p.load.length>=p.cap){
+   throw Error('Aircraft loading capacity reached.');
+  }
+
+  if(!Object.keys(r.need).includes(a.type)){
+   throw Error(
+    'That item does not belong on this flight.'
+   );
+  }
+
+  if(
+   p.load.filter(x=>x===a.type).length >=
+   r.need[a.type]
+  ){
+   throw Error('Requested quantity already loaded.');
+  }
+
+  if(
+   a.type!=='patient' &&
+   S.source[a.type]<=0
+  ){
+   throw Error('Origin inventory is empty.');
+  }
+
+  if(a.type==='patient'&&!S.med.triaged){
+   throw Error('Triage is required.');
+  }
+
+  p.load.push(a.type);
+
+  if(a.type!=='patient'){
+   S.source[a.type]--;
+  }
+
+  log(
+   'Placed '+a.type+' into '+p.label+'.',
+   actor
+  );
+  break;
+
+ case 'UNSLOT':
+  r=request(a.id);
+
+  if(!r||r.status!=='ALLOCATED'){
+   throw Error(
+    'Load is locked after submission.'
+   );
+  }
+
+  is(r.type==='med'?'MEDCOM':'MOB');
+  p=plane(r.plane);
+
+  if(a.slot<0||a.slot>=p.load.length){
+   throw Error('No counter in this slot.');
+  }
+
+  let removed=p.load.splice(a.slot,1)[0];
+
+  if(removed!=='patient'){
+   S.source[removed]++;
+  }
+
+  log(
+   'Removed '+removed+' from aircraft.',
+   actor
+  );
+  break;
+
+ case 'SUBMIT':
+  r=request(a.id);
+
+  if(!r||r.status!=='ALLOCATED'){
+   throw Error(
+    'Aircraft is not ready to submit.'
+   );
+  }
+
+  is(r.type==='med'?'MEDCOM':'MOB');
+  p=plane(r.plane);
+
+  if(
+   Object.entries(r.need).some(
+    ([kind,n])=>
+     p.load.filter(x=>x===kind).length!==n
+   )
+  ){
+   throw Error(
+    'Fill the exact requested load before submitting.'
+   );
+  }
+
+  if(
+   r.type==='med' &&
+   S.med.hospital>=S.med.beds
+  ){
+   throw Error('No hospital bed available.');
+  }
+
+  r.status='ATO';
+  p.status='ATO';
+
+  log(
+   (
+    r.type==='med'
+    ?'MEDCOM submitted medical movement package.'
+    :'MOB submitted ATO and alternate airfield plan.'
+   )+' Waiting for CAOC clearance.',
+   actor
+  );
+  break;
+
+ case 'APPROVE':
+  is('CAOC');
+  r=request(a.id);
+
+  if(!r||r.status!=='ATO'){
+   throw Error('Flight package is not ready.');
+  }
+
+  r.status='CLEARED';
+  plane(r.plane).status='CLEARED';
+
+  log(
+   'CAOC cleared aircraft '+
+   r.plane+
+   ' for the next execution turn.',
+   'CAOC'
+  );
+  break;
+
+ case 'SCAN':
+  is('SPACE');
+
+  if(S.space.queued||S.space.done){
+   throw Error(
+    'Space support already completed or scheduled.'
+   );
+  }
+
+  S.space.queued=true;
+
+  log(
+   'CSpOC queued space collection and communications review.',
+   'CSpOC'
+  );
+  break;
+
+ case 'TRIAGE':
+  is('MEDCOM');
+
+  if(S.med.triageQueued||S.med.triaged){
+   throw Error('Triage already handled.');
+  }
+
+  S.med.triageQueued=true;
+
+  log(
+   'MEDCOM queued patient triage.',
+   'MEDCOM'
+  );
+  break;
+
+ case 'TASK':
+  is('MOB');
+
+  let n=a.n;
+  let task=TASKS[n];
+
+  if(
+   !task ||
+   S.taskDone.includes(n) ||
+   S.taskQueue.includes(n)
+  ){
+   throw Error('Task already done or invalid.');
+  }
+
+  if(
+   task[3].some(
+    pre=>!S.taskDone.includes(pre-1)
+   )
+  ){
+   throw Error(
+    'Missing prerequisite: '+
+    task[3].map(
+     x=>TASKS[x-1][0]
+    ).join(', ')
+   );
+  }
+
+  if(
+   S.site.pallet<task[1] ||
+   S.site.team<task[2]
+  ){
+   throw Error(
+    'Not enough resources at the FOS. Deliver more cargo.'
+   );
+  }
+
+  S.site.pallet-=task[1];
+  S.site.team-=task[2];
+
+  S.taskQueue.push(n);
+
+  log(
+   'FOS team queued task '+
+   (n+1)+': '+task[0]+'.',
+   'MOB'
+  );
+  break;
+
+ case 'VERIFY':
+  is('MOB');
+
+  if(S.verified){
+   throw Error('Already verified.');
+  }
+
+  if(
+   S.rfiAnswered.length<10 ||
+   !S.taskDone.includes(1) ||
+   !S.taskDone.includes(8) ||
+   !S.space.done
+  ){
+   throw Error(
+    'Need 10 RFI answers, Power, Airfield Operations, and Space report.'
+   );
+  }
+
+  S.verified=true;
+
+  log(
+   'FOS LANTERN capability verified by MOB.',
+   'MOB'
+  );
+  break;
+
+ default:
+  throw Error('Unknown action '+type);
+ }
+}
+
+function driveAI(){
+ if(!S||S.phase!=='PLAN'||S.gameOver){
+  return;
+ }
+
+ for(let tick=0;tick<40;tick++){
+  let moved=false;
+
+  const go=(type,arg)=>{
+   try{
+    apply(type,arg,'AI');
+    moved=true;
+   }catch(e){}
+  };
+
+  if(S.role!=='MOB'){
+
+   if(S.rfiAsked.length<5){
+    go('RFI',{
+     n:RFIS.findIndex(
+      (_,i)=>!S.rfiAsked.includes(i)
+     )
+    });
+   }else if(
+    S.rfiAnswered.length>=5 &&
+    S.site.team>=2 &&
+    S.rfiAsked.length<10
+   ){
+    go('RFI',{
+     n:RFIS.findIndex(
+      (_,i)=>!S.rfiAsked.includes(i)
+     )
+    });
+   }
+
+   let rr=S.requests.find(
+    x=>x.type==='cargo' &&
+    !['DONE','CANCELLED'].includes(x.status)
+   );
+
+   if(
+    !rr &&
+    S.source.pallet>=4 &&
+    S.source.team>=3 &&
+    !S.taskDone.includes(8) &&
+    S.site.team<2
+   ){
+    let p=S.planes.find(
+     x=>
+      x.type==='cargo' &&
+      x.status==='AVAILABLE' &&
+      x.cap>=7
+    );
+
+    if(p){
+     go('CARGO',{plane:p.id});
+    }
+   }
+
+   rr=S.requests.find(
+    x=>x.type==='cargo' &&
+    x.status==='ALLOCATED'
+   );
+
+   if(rr){
+    let p=plane(rr.plane);
+
+    for(const kind of ['pallet','team']){
+     if(
+      p.load.filter(x=>x===kind).length <
+      rr.need[kind]
+     ){
+      go('SLOT',{
+       id:rr.id,
+       type:kind
+      });
+     }
+    }
+
+    if(p.load.length===7){
+     go('SUBMIT',{id:rr.id});
+    }
+   }
+
+   if(
+    S.site.pallet>=1 &&
+    S.site.team>=1 &&
+    !S.taskQueue.includes(1) &&
+    !S.taskDone.includes(1)
+   ){
+    go('TASK',{n:1});
+   }
+
+   if(
+    S.taskDone.includes(1) &&
+    S.site.pallet>=1 &&
+    S.site.team>=1 &&
+    !S.taskQueue.includes(8) &&
+    !S.taskDone.includes(8)
+   ){
+    go('TASK',{n:8});
+   }
+
+   if(
+    !S.verified &&
+    S.rfiAnswered.length===10 &&
+    S.taskDone.includes(1) &&
+    S.taskDone.includes(8) &&
+    S.space.done
+   ){
+    go('VERIFY',{});
+   }
+  }
+
+  if(
+   S.role!=='SPACE' &&
+   !S.space.queued &&
+   !S.space.done
+  ){
+   go('SCAN',{});
+  }
+
+  if(S.role!=='MEDCOM'){
+
+   if(
+    !S.med.triaged &&
+    !S.med.triageQueued
+   ){
+    go('TRIAGE',{});
+   }
+
+   if(
+    S.med.triaged &&
+    S.med.fos>0 &&
+    !activeRequest('med') &&
+    plane('MED1').status==='AVAILABLE'
+   ){
+    go('MEDREQ',{});
+   }
+
+   let mr=S.requests.find(
+    x=>x.type==='med' &&
+    x.status==='ALLOCATED'
+   );
+
+   if(mr){
+    if(!plane(mr.plane).load.length){
+     go('SLOT',{
+      id:mr.id,
+      type:'patient'
+     });
+    }
+
+    if(plane(mr.plane).load.length===1){
+     go('SUBMIT',{id:mr.id});
+    }
+   }
+  }
+
+  if(S.role!=='CAOC'){
+
+   let r=S.requests.find(
+    x=>x.status==='PENDING'
+   );
+
+   if(r){
+    go('ALLOCATE',{id:r.id});
+   }
+
+   r=S.requests.find(
+    x=>x.status==='ATO'
+   );
+
+   if(r){
+    go('APPROVE',{id:r.id});
+   }
+  }
+
+  if(!moved){
+   break;
+  }
+ }
+}
+
+function updateScore(){
+ let score=0;
+
+ if(S.rfiAnswered.length===10){
+  score+=5;
+ }
+
+ if(
+  S.taskDone.includes(1) &&
+  S.taskDone.includes(8) &&
+  S.verified
+ ){
+  score+=8;
+ }
+
+ if(S.space.done){
+  score+=2;
+ }
+
+ if(S.med.hospital>=1){
+  score+=4;
+ }
+
+ S.score=score;
+
+ if(score===19&&!S.win){
+  S.win=true;
+  S.gameOver=true;
+  S.phase='SUCCESS';
+
+  log(
+   'ALL PRACTICE OBJECTIVES COMPLETE. MISSION SUCCESS.',
+   'MISSION'
+  );
+
+  toast(
+   'MISSION SUCCESS',
+   'You completed the OPS practice exercise! Open AAR for your debrief.'
+  );
+ }
+}
+
+function advance(){
+ if(!S){
+  return;
+ }
+
+ if(S.gameOver){
+  setTab('AAR');
+  return;
+ }
+
+ if(S.phase==='REVIEW'){
+  S.turn++;
+  S.phase='PLAN';
+
+  S.event=
+   S.turn===3
+   ?'Weather watch: flight delays possible this turn.'
+   :S.turn===5
+    ?'Supply inspection: one home pallet will be removed.'
+    :null;
+
+  if(S.turn>12){
+   S.gameOver=true;
+   S.phase='TIME UP';
+
+   log(
+    'Scenario turn limit reached. Review the mission debrief.'
+   );
+  }else{
+   driveAI();
+   log('Turn '+S.turn+' planning begins.');
+  }
+
+  render();
+  save(false);
+  return;
+ }
+
+ if(S.phase!=='PLAN'){
+  return;
+ }
+
+ driveAI();
+ S.phase='EXECUTION';
+
+ log(
+  'EXECUTING TURN '+S.turn+'...',
+  'GM'
+ );
+
+ for(const i of S.rfiAsked){
+  if(!S.rfiAnswered.includes(i)){
+   S.rfiAnswered.push(i);
+
+   log(
+    'RFI response: '+
+    RFIS[i]+
+    ' — exercise information received.',
+    'GM'
+   );
+  }
+ }
+
+ if(S.space.queued){
+  S.space.queued=false;
+  S.space.done=true;
+
+  log(
+   'CSpOC communications/collection report delivered.',
+   'CSpOC'
+  );
+ }
+
+ if(S.med.triageQueued){
+  S.med.triageQueued=false;
+  S.med.triaged=true;
+
+  log(
+   'Patient triaged and transport cleared to request.',
+   'MEDCOM'
+  );
+ }
+
+ for(const n of S.taskQueue){
+  S.taskDone.push(n);
+
+  log(
+   'FOS task complete: '+TASKS[n][0]+'.',
+   'MOB'
+  );
+ }
+
+ S.taskQueue=[];
+
+ if(
+  S.event &&
+  S.event.startsWith('Supply') &&
+  S.source.pallet>0
+ ){
+  S.source.pallet--;
+
+  log(
+   'Supply inspection: one home pallet temporarily lost.',
+   'GM'
+  );
+ }
+
+ for(const r of S.requests.filter(
+  x=>x.status==='CLEARED'
+ )){
+  const p=plane(r.plane);
+  let delay=false;
+
+  if(
+   S.event?.startsWith('Weather') &&
+   r.type==='cargo'
+  ){
+   const d=1+Math.floor(Math.random()*6);
+
+   S.lastDice=d;
+
+   log(
+    'Weather check: D6 = '+d+'.',
+    'GM'
+   );
+
+   delay=d<3;
+  }
+
+  if(delay){
+   log(
+    p.label+
+    ' held at origin due to fictional weather.',
+    'GM'
+   );
+   continue;
+  }
+
+  r.status='DONE';
+  p.status='AVAILABLE';
+  p.request=null;
+
+  if(r.type==='cargo'){
+
+   for(const x of p.load){
+    S.site[x]++;
+   }
+
+   log(
+    p.label+
+    ' arrived with '+
+    p.load.filter(x=>x==='pallet').length+
+    ' pallets and '+
+    p.load.filter(x=>x==='team').length+
+    ' teams.',
+    'CAOC'
+   );
+
+  }else{
+
+   if(
+    S.med.fos>0 &&
+    S.med.hospital<S.med.beds
+   ){
+    S.med.fos--;
+    S.med.hospital++;
+
+    log(
+     'Medical aircraft delivered one patient. Hospital accountability updated.',
+     'MEDCOM'
+    );
+   }
+  }
+
+  p.load=[];
+ }
+
+ S.phase='REVIEW';
+
+ updateScore();
+ render();
+ save(false);
+}
+
+function save(notify=true){
+ if(!S)return;
+
+ try{
+  localStorage.setItem(
+   SAVEKEY,
+   JSON.stringify(S)
+  );
+
+  if(notify){
+   toast(
+    'SAVED',
+    'Progress saved in this browser.'
+   );
+  }
+ }catch(e){
+  if(notify){
+   toast(
+    'SAVE FAILED',
+    'Browser storage is unavailable.'
+   );
+  }
+ }
+}
+
+function startGame(){
+ S=fresh(chosen);
+ tab=chosen;
+ selectedPlane='C17';
+
+ $('welcome').classList.add('hidden');
+
+ log(
+  'Mission brief: establish FOS LANTERN, finish 10 RFIs, coordinate space and medical support.'
+ );
+
+ log(
+  'You control '+chosen+
+  '. AI handles the other three OPS stations.'
+ );
+
+ driveAI();
+ render();
+ save(false);
+}
+
+function resumeGame(){
+ try{
+  let x=JSON.parse(
+   localStorage.getItem(SAVEKEY)
+  );
+
+  if(!x||x.version!==1){
+   throw Error();
+  }
+
+  S=x;
+  tab=S.role;
+
+  $('welcome').classList.add('hidden');
+
+  render();
+ }catch(e){
+  toast(
+   'NO VALID SAVE',
+   'Start a new mission.'
+  );
+ }
+}
+
+function newGame(){
+ if(confirm(
+  'Start a new OPS mission? Current local progress will be overwritten.'
+ )){
+  $('welcome').classList.remove('hidden');
+  S=null;
+  renderWelcome();
+ }
+}
+
+function changeRole(){
+ if(!S||S.gameOver)return;
+
+ const i=ROLES.indexOf(S.role);
+
+ S.role=ROLES[(i+1)%4];
+ tab=S.role;
+
+ log(
+  'Human player took the '+S.role+
+  ' station; AI took other vacant stations.'
+ );
+
+ driveAI();
+ render();
+ save(false);
+}
+
+function pickRole(r){
+ chosen=r;
+ renderWelcome();
+}
+
+function renderWelcome(){
+ $('roles').innerHTML=ROLES.map(
+  r=>`
+  <button class="${chosen===r?'pick':''}"
+   onclick="pickRole('${r}')">
+   <strong>${r}</strong>
+   <small>${DESCS[r]}</small>
+  </button>
+  `
+ ).join('');
+}
+
+function setTab(x){
+ tab=x;
+ render();
+}
+
+function inspect(x){
+ if(!S)return;
+
+ S.selectedLocation=x;
+
+ $('mapinfo').textContent=
+  x==='FOS LANTERN'
+  ?`FOS LANTERN: ${S.site.pallet} pallets, ${S.site.team} teams, ${S.taskDone.length} tasks.`
+  :x==='MAIN BASE'
+   ?`MAIN BASE: ${S.source.pallet} pallets and ${S.source.team} personnel teams in reserve.`
+   :x==='HOSPITAL'
+    ?`HOSPITAL: ${S.med.hospital}/${S.med.beds} beds occupied.`
+    :x;
+
+ renderMap();
+}
+
+function selectPlane(id){
+ selectedPlane=id;
+
+ tab=plane(id)?.type==='med'
+  ?'MEDCOM'
+  :'MOB';
+
+ $('mapinfo').textContent=
+  plane(id).label+
+  ' selected. Inspect its loading slots on the right.';
+
+ render();
+}
+
+function renderMap(){
+ if(!S)return;
+
+ const svg=$('map');
+ const ns='http://www.w3.org/2000/svg';
+
+ svg.replaceChildren();
+
+ const E=(name,a={},txt)=>{
+  let z=document.createElementNS(ns,name);
+
+  for(const [k,v] of Object.entries(a)){
+   z.setAttribute(k,v);
+  }
+
+  if(txt!=null){
+   z.textContent=txt;
+  }
+
+  return z;
+ };
+
+ svg.append(
+  E('rect',{
+   width:900,
+   height:520,
+   fill:'#123d54'
+  })
+ );
+
+ svg.append(
+  E('path',{
+   d:'M0 0L250 0L295 70L234 134L139 151L80 206L0 197Z M525 0H900V122L836 147L756 115L690 163L605 101Z M750 400L900 369V520H691Z',
+   fill:'#547064',
+   opacity:'.58'
+  })
+ );
+
+ for(let y=0;y<7;y++){
+  for(let x=0;x<13;x++){
+
+   const cx=36+x*68+(y%2?34:0);
+   const cy=48+y*66;
+
+   if(cx>900)continue;
+
+   const pts=Array.from(
+    {length:6},
+    (_,k)=>{
+     let a=k*Math.PI/3-Math.PI/6;
+
+     return (
+      (cx+36*Math.cos(a)).toFixed(1)+
+      ','+
+      (cy+36*Math.sin(a)).toFixed(1)
+     );
+    }
+   ).join(' ');
+
+   const id='H'+x+'-'+y;
+
+   let node=E('polygon',{
+    points:pts,
+    class:'hex'+(
+     selectedHex===id?' selected':''
+    )
+   });
+
+   node.addEventListener('click',()=>{
+    selectedHex=id;
+
+    $('mapinfo').textContent=
+     'Selected exercise hex '+x+
+     ' / '+y+
+     ' — inspect nearby base markers for actions.';
+
+    renderMap();
+   });
+
+   svg.append(node);
+  }
+ }
+
+ svg.append(
+  E('path',{
+   d:'M155 332 Q337 136 500 240 T748 340',
+   class:'route'
+  })
+ );
+
+ function marker(x,y,label,color,func,caption){
+
+  let g=E('g',{
+   class:'point',
+   role:'button',
+   tabindex:0
+  });
+
+  g.append(
+   E('circle',{
+    cx:x,cy:y,r:23,
+    fill:color,
+    stroke:'#f8e7bd',
+    'stroke-width':2
+   })
+  );
+
+  g.append(
+   E('circle',{
+    cx:x,cy:y,r:7,
+    fill:'#0a2a36'
+   })
+  );
+
+  g.append(
+   E('text',{
+    x,
+    y:y+41
+   },label)
+  );
+
+  const fn=()=>{
+   inspect(caption);
+   func();
+  };
+
+  g.addEventListener('click',fn);
+
+  g.addEventListener('keydown',e=>{
+   if(e.key==='Enter')fn();
+  });
+
+  svg.append(g);
+ }
+
+ marker(
+  155,332,'MAIN BASE',
+  '#68c9e8',
+  ()=>setTab('BOARD'),
+  'MAIN BASE'
+ );
+
+ marker(
+  500,240,'FOS LANTERN',
+  S.verified?'#68dbb2':'#f1be65',
+  ()=>setTab('MOB'),
+  'FOS LANTERN'
+ );
+
+ marker(
+  748,340,'HOSPITAL',
+  '#68dbb2',
+  ()=>setTab('MEDCOM'),
+  'HOSPITAL'
+ );
+
+ svg.append(
+  E('text',{
+   x:458,
+   y:26,
+   class:'maptext'
+  },
+  'OPS EXERCISE REGION • ORIGINAL PRACTICE BOARD')
+ );
+
+ S.planes.forEach((p,i)=>{
+
+  const active=p.status==='CLEARED';
+
+  const x=active?390+i*20:210+i*52;
+  const y=active?250+i*9:314+i*15;
+
+  let g=E('g',{
+   class:'plane'+(active?' moving':'')
+  });
+
+  g.append(
+   E('text',{x,y},'✈')
+  );
+
+  g.addEventListener('click',()=>{
+   selectPlane(p.id);
+  });
+
+  svg.append(g);
+ });
+}
+
+function rfiView(){
+ return `
+ <h2>REQUESTS FOR INFORMATION</h2>
+
+ <p>
+  Choose your initial five. Additional RFIs
+  unlock after assessment and at least two
+  teams reach the FOS.
+ </p>
+
+ <div class="rfigrid">
+ ${RFIS.map((name,i)=>{
+
+  const answered=S.rfiAnswered.includes(i);
+  const asked=S.rfiAsked.includes(i);
+
+  const locked=
+   !allowed('MOB') ||
+   asked ||
+   (
+    S.rfiAsked.length>=5 &&
+    (
+     S.rfiAnswered.length<5 ||
+     S.site.team<2
+    )
+   );
+
+  return `
+   <button class="${answered?'done':''}"
+    ${locked?'disabled':''}
+    onclick="doAction('RFI',{n:${i}})">
+    ${answered?'✓':asked?'⌛':'+'} ${name}
+   </button>
+  `;
+
+ }).join('')}
+ </div>
+
+ <p class="tiny">
+  Answers ${S.rfiAnswered.length}/10.
+  Requested ${S.rfiAsked.length}/10.
+ </p>
+ `;
+}
+
+function loadView(r){
+
+ const p=plane(r.plane);
+
+ const isOwn=allowed(
+  r.type==='med'?'MEDCOM':'MOB'
+ );
+
+ let html=`
+ <div class="card">
+ <h3>${p.label} • ${r.status}</h3>
+
+ <p>
+  Request ${r.id}. Load
+  ${Object.entries(r.need).map(
+   ([k,v])=>v+' '+k
+  ).join(' and ')}.
+  Each slot is one simplified practice counter.
+ </p>
+ `;
+
+ if(r.status==='ALLOCATED'){
+
+  html+=`
+   <div class="pieces">
+   ${Object.keys(r.need).map(k=>`
+    <button class="piece ${token===k?'sel':''}"
+     draggable="${isOwn}"
+     ondragstart="dragCounter(event,'${k}')"
+     onclick="selectToken('${k}')"
+     ${!isOwn?'disabled':''}>
+     ${k==='pallet'?'▣':'◈'}
+     ${k.toUpperCase()}
+     <small>
+      (${p.load.filter(x=>x===k).length}/${r.need[k]})
+     </small>
+    </button>
+   `).join('')}
+   </div>
+
+   <div class="hint">
+    Click a counter, then an empty slot.
+    On desktop you can also drag and drop.
+    Click a filled slot to return its counter.
+   </div>
+  `;
+ }
+
+ html+=`
+  <div class="slotgrid">
+  ${Array.from({length:p.cap},(_,i)=>{
+
+   let kind=p.load[i];
+
+   return `
+    <button class="slot ${kind?'filled':''}"
+     ${
+      r.status==='ALLOCATED'&&isOwn
+      ?'':'disabled'
+     }
+     ondragover="dragOver(event)"
+     ondrop="dropCounter(event,'${r.id}',${i})"
+     onclick="slotClick('${r.id}',${i})">
+     ${kind?kind.toUpperCase():'EMPTY'}
+     <small>${i+1}</small>
+    </button>
+   `;
+
+  }).join('')}
+  </div>
+ `;
+
+ if(r.status==='ALLOCATED'){
+
+  html+=`
+   <button class="primary wide"
+    ${!isOwn?'disabled':''}
+    onclick="doAction('SUBMIT',{id:'${r.id}'})">
+    ${
+     r.type==='med'
+     ?'SUBMIT MEDICAL FLIGHT'
+     :'SUBMIT ATO + ALTERNATE'
+    }
+   </button>
+  `;
+ }
+
+ if(r.status==='ATO'){
+  html+=`
+   <p class="gold">
+    Waiting for CAOC flight clearance.
+   </p>
+  `;
+ }
+
+ if(r.status==='CLEARED'){
+  html+=`
+   <p class="green">
+    Cleared! Flight executes when you advance the turn.
+   </p>
+  `;
+ }
+
+ html+='</div>';
+
+ return html;
+}
+
+function selectToken(t){
+ token=t;
+ render();
+}
+
+function slotClick(id,i){
+
+ const r=request(id);
+ const p=plane(r.plane);
+
+ if(!allowed(
+  r.type==='med'?'MEDCOM':'MOB'
+ )){
+  return;
+ }
+
+ if(i<p.load.length){
+  doAction('UNSLOT',{id,slot:i});
+ }else if(i===p.load.length){
+  doAction('SLOT',{id,type:token});
+ }else{
+  toast(
+   'FILL IN ORDER',
+   'Use the first available slot.'
+  );
+ }
+}
+
+function dragCounter(e,t){
+ token=t;
+ e.dataTransfer.setData('text/plain',t);
+}
+
+function dragOver(e){
+ e.preventDefault();
+}
+
+function dropCounter(e,id,i){
+ e.preventDefault();
+
+ token=
+  e.dataTransfer.getData('text/plain') ||
+  token;
+
+ slotClick(id,i);
+}
+
+function cargoStation(){
+
+ let html=`
+ <h2>◈ MOB OPERATIONS</h2>
+
+ <p>
+  Assess the airfield, request aircraft,
+  place counters in slots, and establish
+  required FOS tasks.
+ </p>
+
+ ${rfiView()}
+
+ <hr style="border:0;border-top:1px solid #345566;margin:14px 0">
+
+ <h3>AIRCRAFT AND LOADOUT</h3>
+
+ <p>
+  Origin stock:
+  ${S.source.pallet} pallets /
+  ${S.source.team} teams.
+
+  FOS:
+  ${S.site.pallet} pallets /
+  ${S.site.team} teams.
+ </p>
+ `;
+
+ const active=S.requests.some(
+  r=>r.type==='cargo' &&
+  r.status!=='DONE'
+ );
+
+ html+=`
+ <div class="card">
+  <h3>REQUEST CARGO TRANSPORT</h3>
+  <p>
+   Recommended practice load:
+   4 pallets and 3 teams.
+  </p>
+
+  <div class="grid2">
+   <select id="cargoPick"
+    aria-label="Select cargo aircraft">
+    ${S.planes.filter(
+     p=>p.type==='cargo'
+    ).map(p=>`
+     <option value="${p.id}">
+      ${p.label} (${p.status})
+     </option>
+    `).join('')}
+   </select>
+
+   <button class="primary"
+    onclick="doAction('CARGO',{
+     plane:document.getElementById('cargoPick').value
+    })"
+    ${
+     !allowed('MOB') ||
+     active ||
+     S.source.pallet<4 ||
+     S.source.team<3
+     ?'disabled':''
+    }>
+    SEND REQUEST
+   </button>
+  </div>
+ </div>
+ `;
+
+ for(const r of S.requests.filter(
+  r=>r.type==='cargo'
+ )){
+  if(r.status!=='DONE'){
+   html+=loadView(r);
+  }else{
+   html+=`
+    <div class="card">
+     <h3>✓ ${plane(r.plane).label} delivered</h3>
+     <p>
+      Four pallets and three personnel
+      teams arrived at the FOS.
+     </p>
+    </div>
+   `;
+  }
+ }
+
+ html+=`
+ <h3>16 FOS TASKS</h3>
+
+ <p>
+  Tasks consume counters at the FOS
+  and complete when you execute a turn.
+ </p>
+ `;
+
+ for(let g=0;g<4;g++){
+
+  html+=`
+   <div class="kicker"
+    style="margin-top:13px">
+    ${
+     ['ESTABLISH','DEFEND','OPERATE','MAINTAIN'][g]
+    }
+   </div>
+
+   <div class="taskgrid">
+  `;
+
+  for(let j=g*4;j<g*4+4;j++){
+
+   const t=TASKS[j];
+   const done=S.taskDone.includes(j);
+   const queued=S.taskQueue.includes(j);
+
+   const pre=t[3].every(
+    x=>S.taskDone.includes(x-1)
+   );
+
+   const can=
+    allowed('MOB') &&
+    !done &&
+    !queued &&
+    pre &&
+    S.site.pallet>=t[1] &&
+    S.site.team>=t[2];
+
+   html+=`
+    <button class="${done?'done':''}"
+     ${can?'':'disabled'}
+     onclick="doAction('TASK',{n:${j}})">
+     ${done?'✓ ':queued?'⌛ ':''}
+     ${j+1}. ${t[0]}
+     ${t[1]} pallet • ${t[2]} team
+     ${pre?'':' • NEED PREREQ'}
+    </button>
+   `;
+  }
+
+  html+='</div>';
+ }
+
+ const canVerify=
+  allowed('MOB') &&
+  !S.verified &&
+  S.rfiAnswered.length===10 &&
+  S.taskDone.includes(1) &&
+  S.taskDone.includes(8) &&
+  S.space.done;
+
+ html+=`
+  <button class="primary wide"
+   ${canVerify?'':'disabled'}
+   onclick="doAction('VERIFY')">
+   ✓ VERIFY FOS OPERATIONAL GOAL
+  </button>
+ `;
+
+ return html;
+}
+
+function caocStation(){
+
+ let html=`
+ <h2>✈ CAOC OPERATIONS</h2>
+
+ <p>
+  Allocate pending aircraft requests,
+  then clear complete ATO or medical
+  movement packages.
+  You control whether flights are authorized.
+ </p>
+ `;
+
+ for(const p of S.planes){
+  html+=`
+   <div class="stat">
+    <span>${p.label}</span>
+    <b>${p.status}</b>
+   </div>
+  `;
+ }
+
+ html+=`
+  <h3 style="margin-top:15px">
+   FLIGHT REQUESTS
+  </h3>
+ `;
+
+ if(!S.requests.length){
+  html+=`
+   <div class="hint">
+    Waiting for MOB or MEDCOM to submit a request.
+   </div>
+  `;
+ }
+
+ for(const r of S.requests){
+
+  html+=`
+   <div class="card">
+   <h3>${r.id} • ${plane(r.plane).label}</h3>
+
+   <p>
+    ${
+     r.type==='med'
+     ?'Medical patient'
+     :'Cargo and personnel'
+    } • ${r.status}
+   </p>
+  `;
+
+  if(r.status==='PENDING'){
+   html+=`
+    <button class="primary wide"
+     ${!allowed('CAOC')?'disabled':''}
+     onclick="doAction('ALLOCATE',{
+      id:'${r.id}'
+     })">
+     APPROVE ALLOCATION
+    </button>
+   `;
+  }
+
+  if(r.status==='ATO'){
+   html+=`
+    <button class="primary wide"
+     ${!allowed('CAOC')?'disabled':''}
+     onclick="doAction('APPROVE',{
+      id:'${r.id}'
+     })">
+     ISSUE PPR / CLEAR FLIGHT
+    </button>
+   `;
+  }
+
+  if(r.status==='DONE'){
+   html+=`
+    <span class="tag good">
+     MISSION COMPLETE
+    </span>
+   `;
+  }
+
+  html+='</div>';
+ }
+
+ return html;
+}
+
+function spaceStation(){
+
+ return `
+ <h2>◉ CSPOC / SPACE SUPPORT</h2>
+
+ <p>
+  Choose a fictional communications and
+  orbital-coverage assessment to support
+  the FOS. The report resolves during execution.
+ </p>
+
+ <div class="grid2">
+ ${[
+  'LEO • collection',
+  'MEO • timing',
+  'GEO • communications',
+  'SDA • awareness'
+ ].map(x=>`
+  <div class="card"
+   style="min-height:95px;text-align:center">
+   <div class="gold" style="font-size:25px">
+    ◉
+   </div>
+   <b>${x}</b>
+  </div>
+ `).join('')}
+ </div>
+
+ <div class="status">
+ ${
+  S.space.done
+  ?'✓ Space support report completed and delivered.'
+  :S.space.queued
+   ?'⌛ Space assessment queued for execution.'
+   :'Space collection has not been assigned yet.'
+ }
+ </div>
+
+ <button class="primary wide"
+  ${
+   !allowed('SPACE') ||
+   S.space.done ||
+   S.space.queued
+   ?'disabled':''
+  }
+  onclick="doAction('SCAN')">
+  PLAN AND SEND SPACE SUPPORT ASSESSMENT
+ </button>
+ `;
+}
+
+function medStation(){
+
+ let html=`
+ <h2>✚ MEDCOM / DHA</h2>
+
+ <p>
+  Complete fictional patient triage,
+  request a medical aircraft, place
+  a patient counter, and confirm
+  the receiving hospital.
+ </p>
+
+ <div class="stat">
+  <span>Patients at FOS</span>
+  <b>${S.med.fos}</b>
+ </div>
+
+ <div class="stat">
+  <span>Patients at hospital</span>
+  <b>${S.med.hospital}</b>
+ </div>
+
+ <div class="stat">
+  <span>Hospital beds open</span>
+  <b>${S.med.beds-S.med.hospital}</b>
+ </div>
+
+ <div class="stat">
+  <span>Triage</span>
+  <b>
+   ${
+    S.med.triaged
+    ?'COMPLETE'
+    :S.med.triageQueued
+     ?'QUEUED':'REQUIRED'
+   }
+  </b>
+ </div>
+
+ <button class="primary wide"
+  onclick="doAction('TRIAGE')"
+  ${
+   !allowed('MEDCOM') ||
+   S.med.triaged ||
+   S.med.triageQueued
+   ?'disabled':''
+  }>
+  QUEUE PATIENT TRIAGE
+ </button>
+
+ <button class="wide"
+  onclick="doAction('MEDREQ')"
+  ${
+   !allowed('MEDCOM') ||
+   !S.med.triaged ||
+   !S.med.fos ||
+   activeRequest('med')
+   ?'disabled':''
+  }>
+  REQUEST MEDICAL AIRCRAFT
+ </button>
+ `;
+
+ for(const r of S.requests.filter(
+  r=>r.type==='med'
+ )){
+  if(r.status==='DONE'){
+   html+=`
+    <div class="card">
+     ✓ Patient delivered and accounted
+     for at the hospital.
+    </div>
+   `;
+  }else{
+   html+=loadView(r);
+  }
+ }
+
+ return html;
+}
+
+function boardStation(){
+
+ return `
+ <h2>MISSION CONTROL BOARD</h2>
+
+ <div class="card">
+  <h3>FOS LANTERN</h3>
+  <p>
+   FOS stock ${S.site.pallet} pallets,
+   ${S.site.team} teams.
+   RFIs answered ${S.rfiAnswered.length}/10.
+   Tasks completed ${S.taskDone.length}/16.
+  </p>
+  <button class="wide"
+   onclick="setTab('MOB')">
+   OPEN MOB WORKSTATION
+  </button>
+ </div>
+
+ <div class="card">
+  <h3>AIR TRANSPORT</h3>
+  <p>
+   ${
+    S.planes.filter(
+     p=>p.status==='CLEARED'
+    ).length
+   } flights ready to execute.
+
+   ${
+    S.requests.filter(
+     r=>r.status==='DONE'
+    ).length
+   } flights completed.
+  </p>
+  <button class="wide"
+   onclick="setTab('CAOC')">
+   OPEN CAOC WORKSTATION
+  </button>
+ </div>
+
+ <div class="card">
+  <h3>SPACE AND MEDICAL</h3>
+  <p>
+   Space report:
+   ${S.space.done?'COMPLETE':'PENDING'}.
+
+   Hospital patients:
+   ${S.med.hospital}/1.
+  </p>
+  <button class="wide"
+   onclick="setTab('MEDCOM')">
+   OPEN MEDCOM WORKSTATION
+  </button>
+ </div>
+
+ <div class="hint">
+  Click the interactive board to inspect
+  a base or aircraft. Switch to your assigned
+  station to take actions. AI handles
+  the other stations.
+ </div>
+ `;
+}
+
+function aarStation(){
+
+ return `
+ <h2>AFTER-ACTION REVIEW</h2>
+
+ <p>
+  Fictional practice score;
+  not an official OPS grading scheme.
+ </p>
+
+ <div class="card">
+  <h1 class="gold">
+   ${S.score}
+   <span class="muted" style="font-size:20px">
+    / 19 VP
+   </span>
+  </h1>
+  <p>
+   ${
+    S.win
+    ?'MISSION COMPLETE'
+    :'OBJECTIVES STILL IN PROGRESS'
+   }
+  </p>
+ </div>
+
+ ${[
+  ['RFIs answered',S.rfiAnswered.length+'/10'],
+  ['Completed FOS tasks',S.taskDone.length+'/16'],
+  ['Power',S.taskDone.includes(1)?'YES':'NO'],
+  ['Airfield Operations',S.taskDone.includes(8)?'YES':'NO'],
+  ['FOS verified',S.verified?'YES':'NO'],
+  ['Space report',S.space.done?'YES':'NO'],
+  ['Patient transferred',S.med.hospital+'/1'],
+  ['Final turn',S.turn]
+ ].map(([k,v])=>`
+  <div class="stat">
+   <span>${k}</span>
+   <b>${v}</b>
+  </div>
+ `).join('')}
+
+ <button class="wide" onclick="newGame()">
+  START A NEW MISSION
+ </button>
+ `;
+}
+
+function getCoach(){
+
+ if(S.gameOver){
+  return 'Mission ended. Open the AAR tab for your debrief.';
+ }
+
+ if(S.phase==='REVIEW'){
+  return 'Turn adjudicated. Click NEXT TURN to return to planning.';
+ }
+
+ if(S.role==='MOB'){
+
+  if(S.rfiAsked.length<5){
+   return 'MOB: Click five different RFI buttons. Then request a cargo aircraft.';
+  }
+
+  let cargo=S.requests.find(
+   r=>r.type==='cargo' &&
+   r.status!=='DONE'
+  );
+
+  if(!cargo&&S.site.team<2){
+   return 'MOB: Request cargo support (four pallets and three teams).';
+  }
+
+  if(cargo?.status==='ALLOCATED'){
+   return 'MOB: Choose PALLET or TEAM, click empty aircraft slots until the load is full, then submit ATO.';
+  }
+
+  if(cargo?.status==='ATO'){
+   return 'MOB: Wait for CAOC to clear your flight, then execute a turn.';
+  }
+
+  if(
+   S.site.team>=2 &&
+   S.rfiAsked.length<10
+  ){
+   return 'MOB: Complete the remaining five RFIs now that teams are on site.';
+  }
+
+  if(!S.taskDone.includes(1)){
+   return 'MOB: Queue Power (task 2), then execute the turn.';
+  }
+
+  if(!S.taskDone.includes(8)){
+   return 'MOB: Queue Airfield Operations (task 9), then execute the turn.';
+  }
+
+  if(!S.verified){
+   return 'MOB: Verify the FOS once RFIs, tasks, and space reporting are complete.';
+  }
+ }
+
+ if(S.role==='CAOC'){
+
+  let r=S.requests.find(
+   r=>r.status==='PENDING' ||
+   r.status==='ATO'
+  );
+
+  return r
+   ?'CAOC: Open request '+r.id+
+    ' and approve allocation or clear the flight.'
+   :'CAOC: Await requests from AI MOB and MEDCOM, and execute the turn.';
+ }
+
+ if(S.role==='SPACE'){
+
+  return S.space.done
+   ?'CSpOC: Your report is complete. Advance the game while other AI stations work.'
+   :'CSpOC: Click PLAN AND SEND SPACE SUPPORT ASSESSMENT.';
+ }
+
+ if(S.role==='MEDCOM'){
+
+  return !S.med.triaged
+   ?'MEDCOM: Queue triage, then execute the turn.'
+   :S.med.fos
+    ?'MEDCOM: Request medical aircraft; when allocated, place the patient counter and submit.'
+    :'MEDCOM: The patient is at the hospital. Advance turns for the other stations.';
+ }
+
+ return 'Inspect the board and use your station controls.';
+}
+
+function render(){
+ if(!S)return;
+
+ $('hrole').textContent=S.role;
+ $('hturn').textContent=S.turn;
+ $('hphase').textContent=S.phase;
+ $('hscore').textContent=S.score+' / 19';
+
+ $('progress').style.width=
+  (100*S.score/19)+'%';
+
+ $('progressText').textContent=
+  Math.round(S.score/19*100)+'%';
+
+ $('endTurn').textContent=
+  S.gameOver
+  ?'VIEW DEBRIEF'
+  :S.phase==='PLAN'
+   ?'▶ EXECUTE TURN'
+   :'↻ NEXT TURN';
+
+ const goals=[
+  [
+   '10 RFI responses',
+   S.rfiAnswered.length===10,
+   S.rfiAnswered.length+'/10'
+  ],
+  [
+   'Power constructed',
+   S.taskDone.includes(1),
+   S.taskDone.includes(1)?'DONE':'OPEN'
+  ],
+  [
+   'Airfield Ops constructed',
+   S.taskDone.includes(8),
+   S.taskDone.includes(8)?'DONE':'OPEN'
+  ],
+  [
+   'CSpOC support',
+   S.space.done,
+   S.space.done?'DONE':'OPEN'
+  ],
+  [
+   'Medical evacuation',
+   S.med.hospital>0,
+   S.med.hospital+'/1'
+  ],
+  [
+   'FOS verified',
+   S.verified,
+   S.verified?'DONE':'OPEN'
+  ]
+ ];
+
+ $('objectives').innerHTML=goals.map(
+  ([name,done,n])=>`
+   <div class="mission ${done?'complete':'current'}">
+    <b>${done?'✓ ':'○ '}${name}</b>
+    <small>${n}</small>
+   </div>
+  `
+ ).join('');
+
+ $('roster').innerHTML=ROLES.map(
+  r=>`
+   <div class="roster">
+    <b>${r}</b>
+    <span class="tag ${S.role===r?'warn':'good'}">
+     ${S.role===r?'YOU':'AI'}
+    </span>
+   </div>
+  `
+ ).join('');
+
+ $('coach').textContent=getCoach();
+
+ $('tabs').innerHTML=[
+  'BOARD',...ROLES,'COMMS','AAR'
+ ].map(
+  x=>`
+   <button class="${tab===x?'active':''}"
+    onclick="setTab('${x}')">
+    ${x}
+   </button>
+  `
+ ).join('');
+
+ $('work').innerHTML=
+  tab==='BOARD'?boardStation():
+  tab==='MOB'?cargoStation():
+  tab==='CAOC'?caocStation():
+  tab==='SPACE'?spaceStation():
+  tab==='MEDCOM'?medStation():
+  tab==='COMMS'
+  ?`
+   <h2>COMMAND COMMUNICATIONS</h2>
+   <p>
+    Each step is logged for the after-action review.
+   </p>
+   ${S.log.slice(0,25).map(
+    e=>`
+     <div class="logline">
+      <b>TURN ${e.turn} • ${e.who}</b>
+      — ${escapeHTML(e.msg)}
+     </div>
+    `
+   ).join('')}
+  `
+  :aarStation();
+
+ if(
+  ROLES.includes(tab) &&
+  tab!==S.role
+ ){
+  $('work').insertAdjacentHTML(
+   'afterbegin',
+   `
+    <div class="hint">
+     ${tab} is staffed by AI.
+     You may inspect this station,
+     but only ${S.role} issues your direct orders.
+     Use SWITCH MY STATION to control this position.
+    </div>
+   `
+  );
+ }
+
+ $('log').innerHTML=S.log.slice(0,13).map(
+  e=>`
+   <div class="logline">
+    <b>T${e.turn} ${e.who}</b>
+    ${escapeHTML(e.msg)}
+   </div>
+  `
+ ).join('');
+
+ if(S.event&&S.phase==='PLAN'){
+  $('coach').insertAdjacentHTML(
+   'beforeend',
+   `
+    <div class="tag warn" style="margin-top:8px">
+     ${S.event}
+    </div>
+   `
+  );
+ }
+
+ renderMap();
+}
+
+function escapeHTML(s){
+ return String(s).replace(
+  /[&<>"']/g,
+  c=>({
+   '&':'&amp;',
+   '<':'&lt;',
+   '>':'&gt;',
+   '"':'&quot;',
+   "'":'&#39;'
+  }[c])
+ );
+}
+
+function showHelp(which){
+
+ if(!S&&which==='hint'){
+  return;
+ }
+
+ const hint=which==='hint';
+
+ $('helpTitle').textContent=
+  hint
+  ?'YOUR NEXT BEST STEP'
+  :'HOW TO PLAY OPS';
+
+ $('helpContent').innerHTML=
+  hint
+  ?`<p>${getCoach()}</p>`
+  :`
+   <p>
+    <b>1.</b>
+    Choose MOB, CAOC, SPACE, or MEDCOM.
+    AI runs all other stations.
+   </p>
+
+   <p>
+    <b>2.</b>
+    Select an action on your workstation.
+    For aircraft loading, click a cargo
+    counter, then an empty aircraft slot.
+    Click a filled slot to undo it.
+    You can also drag and drop.
+   </p>
+
+   <p>
+    <b>3.</b>
+    Coordinate across stations.
+    MOB requests aircraft →
+    CAOC allocates →
+    MOB loads and submits ATO →
+    CAOC clears →
+    EXECUTE TURN delivers cargo.
+   </p>
+
+   <p>
+    <b>4.</b>
+    Queue airfield tasks, Space collection,
+    and MEDCOM triage.
+    Those complete when you execute a turn.
+   </p>
+
+   <p>
+    <b>5.</b>
+    Complete the six objectives
+    to earn 19 fictional training points.
+    Open AAR for your debrief.
+   </p>
+
+   <p>
+    <b>Note:</b>
+    This is an independently authored
+    OPS-inspired practice game.
+    It does not contain official CUI,
+    GM-only information, or real OPS scoring.
+   </p>
+  `;
+
+ $('help').classList.remove('hidden');
+}
+
+function rollDice(){
+
+ const d=1+Math.floor(Math.random()*6);
+
+ if(S){
+  S.lastDice=d;
+
+  log(
+   'D6 training roll = '+d+'.',
+   'DICE'
+  );
+
+  render();
+  save(false);
+ }
+
+ toast(
+  '🎲 D6 ROLL: '+d,
+  'The game records your die roll. Weather event rolls are automatic when applicable.'
+ );
+}
+
+window.addEventListener('load',()=>{
+ renderWelcome();
+
+ try{
+  if(localStorage.getItem(SAVEKEY)){
+   $('resumeBtn').classList.remove('hidden');
+  }
+ }catch(e){}
+});
+</script>
+</body>
+</html>
